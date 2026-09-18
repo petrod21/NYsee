@@ -59,7 +59,7 @@ function ItineraryPage() {
     );
   }
 
-  const active = trip.plan[day] ?? trip.plan[0];
+  const active = trip.plan[day] ?? trip.plan[0]!;
 
   return (
     <main className="min-h-screen pb-16">
@@ -123,7 +123,7 @@ function DayView({
   dayIndex: number;
   onTripUpdate: (t: SavedTrip) => void;
 }) {
-  const plan = trip.plan[dayIndex];
+  const plan = trip.plan[dayIndex]!;
   const stops = useMemo(
     () => plan.stopIds.map((id) => ATTRACTION_BY_ID.get(id)).filter((a): a is Attraction => !!a),
     [plan.stopIds],
@@ -169,17 +169,17 @@ function DayView({
   // Build the time schedule
   let clock = DAY_START_MINUTES;
   const schedule = stops.map((stop, i) => {
-    const travel = legs?.[i]?.minutes ?? estimateMinutes(points[i], points[i + 1]);
+    const travel = legs?.[i]?.minutes ?? estimateMinutes(points[i]!, points[i + 1]!);
     clock += travel;
     const arrive = clock;
     clock += stop.minutes;
     return { stop, arrive, depart: clock };
   });
-  const backHome = legs?.[stops.length]?.minutes ?? estimateMinutes(points[stops.length], points[stops.length + 1]);
+  const backHome = legs?.[stops.length]?.minutes ?? estimateMinutes(points[stops.length]!, points[stops.length + 1]!);
   const endOfDay = clock + backHome;
   const totalTravel = legs
     ? legs.reduce((s, l) => s + l.minutes, 0)
-    : points.slice(1).reduce((s, p, i) => s + estimateMinutes(points[i], p), 0);
+    : points.slice(1).reduce((s, p, i) => s + estimateMinutes(points[i]!, p), 0);
 
   return (
     <div className="space-y-5">
@@ -216,7 +216,7 @@ function DayView({
           <li key={stop.id} className="relative">
             <LegDirections
               leg={legs?.[i]}
-              estimateMinutes={estimateMinutes(points[i], points[i + 1])}
+              estimateMinutes={estimateMinutes(points[i]!, points[i + 1]!)}
               loading={query.isFetching && !legs}
               error={query.isError ? "Estimate only" : undefined}
             />
@@ -251,7 +251,7 @@ function DayView({
         <li className="relative">
           <LegDirections
             leg={legs?.[stops.length]}
-            estimateMinutes={estimateMinutes(points[stops.length], points[stops.length + 1])}
+            estimateMinutes={estimateMinutes(points[stops.length]!, points[stops.length + 1]!)}
             loading={query.isFetching && !legs}
             error={query.isError ? "Estimate only" : undefined}
           />

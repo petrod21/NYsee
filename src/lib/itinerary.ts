@@ -98,7 +98,7 @@ function orderStops(hotel: LatLng, stops: Attraction[]): Attraction[] {
         bi = i;
       }
     });
-    const next = remaining.splice(bi, 1)[0];
+    const next = remaining.splice(bi, 1)[0]!;
     ordered.push(next);
     cur = next;
   }
@@ -109,10 +109,10 @@ function orderStops(hotel: LatLng, stops: Attraction[]): Attraction[] {
     improved = false;
     for (let i = 0; i < ordered.length - 2; i++) {
       for (let j = i + 1; j < ordered.length - 1; j++) {
-        const a = i === 0 ? hotel : ordered[i - 1];
-        const b = ordered[i];
-        const c = ordered[j];
-        const d = ordered[j + 1];
+        const a = i === 0 ? hotel : ordered[i - 1]!;
+        const b = ordered[i]!;
+        const c = ordered[j]!;
+        const d = ordered[j + 1]!;
         if (dist(a, b) + dist(c, d) > dist(a, c) + dist(b, d) + 1) {
           ordered.splice(i, j - i + 1, ...ordered.slice(i, j + 1).reverse());
           improved = true;
@@ -150,8 +150,8 @@ export function buildItinerary(hotel: LatLng, selected: Attraction[], days: numb
         seedIdx = i;
       }
     });
-    const stops = [remaining.splice(seedIdx, 1)[0]];
-    let minutes = stops[0].minutes;
+    const stops: Attraction[] = [remaining.splice(seedIdx, 1)[0]!];
+    let minutes = stops[0]!.minutes;
 
     while (stops.length < target && remaining.length) {
       const c = centroid(stops);
@@ -164,9 +164,9 @@ export function buildItinerary(hotel: LatLng, selected: Attraction[], days: numb
           bi = i;
         }
       });
-      const next = remaining[bi];
+      const next = remaining[bi]!;
       if (minutes + next.minutes > DAY_BUDGET_MINUTES && stops.length >= 2 && daysLeft > 1) break;
-      stops.push(remaining.splice(bi, 1)[0]);
+      stops.push(remaining.splice(bi, 1)[0]!);
       minutes += next.minutes;
     }
     groups.push(orderStops(hotel, stops));

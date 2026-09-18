@@ -11,8 +11,8 @@ interface Props {
 /** Static overview map of a day's loop, rendered with the browser Maps key. */
 export function DayMap({ hotel, stops, label }: Props) {
   const [failed, setFailed] = useState(false);
-  const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
-  const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as
+  const key = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"] as string | undefined;
+  const channel = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID"] as
     | string
     | undefined;
   if (!key || failed || stops.length === 0) return null;

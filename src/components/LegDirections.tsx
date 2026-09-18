@@ -4,10 +4,10 @@ import { SubwayBullet } from "@/components/SubwayBullet";
 import { formatDistance, formatDuration, type Leg } from "@/lib/itinerary";
 
 interface Props {
-  leg?: Leg;
+  leg: Leg | undefined;
   estimateMinutes: number;
   loading: boolean;
-  error?: string;
+  error: string | undefined;
 }
 
 export function LegDirections({ leg, estimateMinutes, loading, error }: Props) {

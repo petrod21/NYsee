@@ -133,7 +133,7 @@ async function computeRoute(origin: LatLng, destination: LatLng, mode: "WALK" | 
     units: "IMPERIAL",
   };
   if (mode === "TRANSIT") {
-    body.transitPreferences = {
+    body["transitPreferences"] = {
       allowedTravelModes: ["SUBWAY", "TRAIN", "LIGHT_RAIL"],
       routingPreference: "LESS_WALKING",
     };
@@ -244,14 +244,14 @@ export async function computeLeg(origin: LatLng, destination: LatLng): Promise<L
 
 /** Computes consecutive legs for a list of points with bounded concurrency. */
 export async function computeLegs(points: LatLng[]): Promise<Leg[]> {
-  const pairs = points.slice(1).map((p, i) => [points[i], p] as const);
+  const pairs = points.slice(1).map((p, i) => [points[i]!, p] as const);
   const results: Leg[] = new Array(pairs.length);
   const CONCURRENCY = 3;
   let cursor = 0;
   async function worker() {
     while (cursor < pairs.length) {
       const i = cursor++;
-      const [o, d] = pairs[i];
+      const [o, d] = pairs[i]!;
       results[i] = await computeLeg(o, d);
     }
   }
