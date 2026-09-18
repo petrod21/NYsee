@@ -13,7 +13,7 @@ interface Props {
 export function LegDirections({ leg, estimateMinutes, loading, error }: Props) {
   if (loading || (!leg && !error)) {
     return (
-      <div className="rail-line-dashed-wrapper py-3 pl-11">
+      <div className="py-3 pl-11">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
           Loading directions · ~{formatDuration(estimateMinutes)}

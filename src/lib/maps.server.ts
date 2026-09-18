@@ -1,4 +1,4 @@
-import type { LatLng, Leg, LegStep, TransitStep, WalkStep } from "./itinerary";
+import type { LatLng, Leg, LegStep, PlaceSuggestion, TransitStep, WalkStep } from "./itinerary";
 import { haversineMeters } from "./itinerary";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
@@ -39,12 +39,6 @@ async function handleError(response: Response): Promise<never> {
   const text = await response.text();
   console.error(`Google Maps request failed [${response.status}]: ${text}`);
   throw new Error(`Google Maps request failed [${response.status}]: ${text}`);
-}
-
-export interface PlaceSuggestion {
-  placeId: string;
-  main: string;
-  secondary: string;
 }
 
 export async function autocompletePlaces(

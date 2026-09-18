@@ -206,3 +206,9 @@ export function formatDistance(meters: number): string {
   if (miles < 0.1) return `${Math.round(meters * 3.281)} ft`;
   return `${miles.toFixed(1)} mi`;
 }
+
+export interface PlaceSuggestion {
+  placeId: string;
+  main: string;
+  secondary: string;
+}

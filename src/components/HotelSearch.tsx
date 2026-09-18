@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { searchHotelPlaces, getHotelPlace } from "@/lib/maps.functions";
 import type { Hotel } from "@/lib/itinerary";
-import type { PlaceSuggestion } from "@/lib/maps.server";
+import type { PlaceSuggestion } from "@/lib/itinerary";
 
 interface Props {
   value: Hotel | null;
