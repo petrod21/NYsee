@@ -1,4 +1,4 @@
-import { Footprints, TrainFront } from "lucide-react";
+import { Bus, Footprints, Ship, TrainFront } from "lucide-react";
 
 import { SubwayBullet } from "@/components/SubwayBullet";
 import { formatDistance, formatDuration, type Leg } from "@/lib/itinerary";
@@ -42,23 +42,27 @@ export function LegDirections({ leg, estimateMinutes, loading, error }: Props) {
             <li key={i} className="flex items-start gap-2 text-sm">
               <Footprints className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
-                Walk <strong>{formatDuration(step.minutes)}</strong> ({formatDistance(step.meters)})
+                {step.meters < 30 ? (
+                  <>Transfer · {formatDuration(step.minutes)}</>
+                ) : (
+                  <>
+                    Walk <strong>{formatDuration(step.minutes)}</strong> ({formatDistance(step.meters)})
+                  </>
+                )}
               </span>
             </li>
           ) : (
             <li key={i} className="flex items-start gap-2 text-sm">
-              {step.vehicle === "SUBWAY" ? (
-                <SubwayBullet
-                  label={step.line}
-                  hex={{ bg: step.color, text: step.textColor }}
-                  size="md"
-                />
-              ) : (
-                <span className="flex items-center gap-1">
+              <span className="flex shrink-0 items-center gap-1">
+                {step.vehicle === "BUS" ? (
+                  <Bus className="h-4 w-4" />
+                ) : step.vehicle === "FERRY" ? (
+                  <Ship className="h-4 w-4" />
+                ) : step.vehicle !== "SUBWAY" ? (
                   <TrainFront className="h-4 w-4" />
-                  <SubwayBullet label={step.line} hex={{ bg: step.color, text: step.textColor }} />
-                </span>
-              )}
+                ) : null}
+                <SubwayBullet label={step.line} hex={{ bg: step.color, text: step.textColor }} />
+              </span>
               <span className="min-w-0">
                 <span className="block">
                   <strong>{step.from}</strong> → <strong>{step.to}</strong>

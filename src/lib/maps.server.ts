@@ -120,6 +120,12 @@ interface RawStep {
   };
 }
 
+/** "R Line" / "4 Train (Lexington Av Express)" -> "R" / "4"; buses keep their route id. */
+function shortLine(name: string): string {
+  const cleaned = name.replace(/\s+(Line|Train)\b.*$/i, "").trim();
+  return cleaned || name;
+}
+
 const seconds = (s?: string) => (s ? parseInt(s, 10) || 0 : 0);
 const toMin = (sec: number) => Math.max(1, Math.round(sec / 60));
 
@@ -165,7 +171,7 @@ function parseSteps(raw: RawStep[]): LegStep[] {
       const step: TransitStep = {
         kind: "transit",
         minutes: toMin(seconds(s.staticDuration)),
-        line: t.transitLine?.nameShort ?? t.transitLine?.name ?? "?",
+        line: shortLine(t.transitLine?.nameShort ?? t.transitLine?.name ?? "?"),
         lineName: t.transitLine?.name ?? "",
         color: t.transitLine?.color ?? "#111111",
         textColor: t.transitLine?.textColor ?? "#FFFFFF",
