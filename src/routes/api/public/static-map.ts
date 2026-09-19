@@ -42,25 +42,37 @@ export const Route = createFileRoute("/api/public/static-map")({
 
         const lovableKey = process.env["LOVABLE_API_KEY"];
         const mapsKey = process.env["GOOGLE_MAPS_API_KEY"];
-        if (!lovableKey || !mapsKey) return new Response("Not configured", { status: 503 });
+        const browserKey = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"] as
+          | string
+          | undefined;
 
         const params = buildParams(parsed.data.hotel, parsed.data.stops);
+        let upstream: Response | null = null;
 
-        let upstream = await fetch(`${GATEWAY_URL}/maps/api/staticmap?${params.toString()}`, {
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": mapsKey,
-          },
-        });
-
-        if (!upstream.ok || !(upstream.headers.get("content-type") ?? "").startsWith("image/")) {
-          console.error(
-            `Static map gateway [${upstream.status}] ${upstream.headers.get("content-type")}: ${(await upstream.clone().text()).slice(0, 300)}`,
-          );
+        // The browser key is the one authorized for Static Maps; send it with an
+        // allowed referer so the map also renders on non-hosted origins.
+        if (browserKey) {
           const direct = new URLSearchParams(params);
-          direct.set("key", mapsKey);
-          upstream = await fetch(`https://maps.googleapis.com/maps/api/staticmap?${direct.toString()}`);
+          direct.set("key", browserKey);
+          const referer = url.hostname.endsWith("lovable.app")
+            ? `${url.origin}/`
+            : `https://${ALLOWED_REFERER_HOST}/`;
+          upstream = await fetch(
+            `https://maps.googleapis.com/maps/api/staticmap?${direct.toString()}`,
+            { headers: { Referer: referer } },
+          );
         }
+
+        if (!isImage(upstream) && lovableKey && mapsKey) {
+          upstream = await fetch(`${GATEWAY_URL}/maps/api/staticmap?${params.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${lovableKey}`,
+              "X-Connection-Api-Key": mapsKey,
+            },
+          });
+        }
+
+        if (!upstream) return new Response("Not configured", { status: 503 });
 
         if (!upstream.ok || !(upstream.headers.get("content-type") ?? "").startsWith("image/")) {
           console.error(`Static map failed [${upstream.status}]: ${await upstream.text()}`);
