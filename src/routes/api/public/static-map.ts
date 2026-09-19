@@ -54,6 +54,9 @@ export const Route = createFileRoute("/api/public/static-map")({
         });
 
         if (!upstream.ok || !(upstream.headers.get("content-type") ?? "").startsWith("image/")) {
+          console.error(
+            `Static map gateway [${upstream.status}] ${upstream.headers.get("content-type")}: ${(await upstream.clone().text()).slice(0, 300)}`,
+          );
           const direct = new URLSearchParams(params);
           direct.set("key", mapsKey);
           upstream = await fetch(`https://maps.googleapis.com/maps/api/staticmap?${direct.toString()}`);
