@@ -165,7 +165,9 @@ function parseSteps(raw: RawStep[]): LegStep[] {
       const step: TransitStep = {
         kind: "transit",
         minutes: toMin(seconds(s.staticDuration)),
-        line: t.transitLine?.nameShort ?? t.transitLine?.name ?? "?",
+        line:
+          t.transitLine?.nameShort ??
+          (t.transitLine?.name?.match(/^([A-Z0-9]{1,2})\b/)?.[1] ?? t.transitLine?.name ?? "?"),
         lineName: t.transitLine?.name ?? "",
         color: t.transitLine?.color ?? "#111111",
         textColor: t.transitLine?.textColor ?? "#FFFFFF",

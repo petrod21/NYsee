@@ -42,7 +42,13 @@ export function LegDirections({ leg, estimateMinutes, loading, error }: Props) {
             <li key={i} className="flex items-start gap-2 text-sm">
               <Footprints className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
-                Walk <strong>{formatDuration(step.minutes)}</strong> ({formatDistance(step.meters)})
+                {step.meters < 30 ? (
+                  <>Transfer · {formatDuration(step.minutes)}</>
+                ) : (
+                  <>
+                    Walk <strong>{formatDuration(step.minutes)}</strong> ({formatDistance(step.meters)})
+                  </>
+                )}
               </span>
             </li>
           ) : (
