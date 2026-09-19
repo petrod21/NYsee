@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ItineraryRouteImport } from './routes/itinerary'
+import { Route as ApiPublicStaticMapRouteImport } from './routes/api/public/static-map'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const ItineraryRoute = ItineraryRouteImport.update({
   path: '/itinerary',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStaticMapRoute = ApiPublicStaticMapRouteImport.update({
+  id: '/api/public/static-map',
+  path: '/api/public/static-map',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/itinerary': typeof ItineraryRoute
+  '/api/public/static-map': typeof ApiPublicStaticMapRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/itinerary': typeof ItineraryRoute
+  '/api/public/static-map': typeof ApiPublicStaticMapRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/itinerary': typeof ItineraryRoute
+  '/api/public/static-map': typeof ApiPublicStaticMapRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/itinerary'
+  fullPaths: '/' | '/itinerary' | '/api/public/static-map'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/itinerary'
-  id: '__root__' | '/' | '/itinerary'
+  to: '/' | '/itinerary' | '/api/public/static-map'
+  id: '__root__' | '/' | '/itinerary' | '/api/public/static-map'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ItineraryRoute: typeof ItineraryRoute
+  ApiPublicStaticMapRoute: typeof ApiPublicStaticMapRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItineraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/static-map': {
+      id: '/api/public/static-map'
+      path: '/api/public/static-map'
+      fullPath: '/api/public/static-map'
+      preLoaderRoute: typeof ApiPublicStaticMapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ItineraryRoute: ItineraryRoute,
+  ApiPublicStaticMapRoute: ApiPublicStaticMapRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
