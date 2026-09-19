@@ -74,7 +74,7 @@ export const Route = createFileRoute("/api/public/static-map")({
 
         if (!upstream) return new Response("Not configured", { status: 503 });
 
-        if (!upstream.ok || !(upstream.headers.get("content-type") ?? "").startsWith("image/")) {
+        if (!isImage(upstream)) {
           console.error(`Static map failed [${upstream.status}]: ${await upstream.text()}`);
           return new Response("Map unavailable", { status: 502 });
         }
