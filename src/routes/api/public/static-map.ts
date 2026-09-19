@@ -11,6 +11,15 @@ const querySchema = z.object({
 });
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+const ALLOWED_REFERER_HOST = "id-preview--154bec2c-3144-4c19-87bd-973bc4ee946c.lovable.app";
+
+function isImage(response: Response | null): response is Response {
+  return (
+    !!response &&
+    response.ok &&
+    (response.headers.get("content-type") ?? "").startsWith("image/")
+  );
+}
 
 function buildParams(hotel: string, stops: string[]) {
   const params = new URLSearchParams({
