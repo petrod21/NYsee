@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Clock, Hotel as HotelIcon, RefreshCw } from "lucide-react";
+import { ArrowLeft, Clock, Hotel as HotelIcon, Navigation, RefreshCw } from "lucide-react";
 
 import { DayMap } from "@/components/DayMap";
 import { LegDirections } from "@/components/LegDirections";
@@ -14,6 +14,7 @@ import {
   formatClock,
   formatDuration,
   pointsKey,
+  type LatLng,
   type Leg,
   type SavedTrip,
 } from "@/lib/itinerary";
