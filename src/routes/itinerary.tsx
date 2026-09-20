@@ -270,6 +270,30 @@ function DayView({
   );
 }
 
+/** Deep link into the Google Maps app/site — live navigation happens on the user's device, no API cost. */
+function mapsDirUrl(from: LatLng, to: LatLng) {
+  const params = new URLSearchParams({
+    api: "1",
+    origin: `${from.lat},${from.lng}`,
+    destination: `${to.lat},${to.lng}`,
+    travelmode: "transit",
+  });
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function LiveDirectionsLink({ from, to }: { from: LatLng; to: LatLng }) {
+  return (
+    <a
+      href={mapsDirUrl(from, to)}
+      target="_blank"
+      rel="noreferrer"
+      className="label-caps ml-11 inline-flex items-center gap-1 border-b-2 border-primary pb-0.5 text-primary hover:text-foreground"
+    >
+      <Navigation className="h-3 w-3" /> Open live directions in Google Maps
+    </a>
+  );
+}
+
 function TimelineNode({
   icon,
   title,
