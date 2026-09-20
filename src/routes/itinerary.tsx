@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Clock, Hotel as HotelIcon, RefreshCw } from "lucide-react";
+import { ArrowLeft, Clock, Hotel as HotelIcon, Navigation, RefreshCw } from "lucide-react";
 
 import { DayMap } from "@/components/DayMap";
 import { LegDirections } from "@/components/LegDirections";
@@ -14,6 +14,7 @@ import {
   formatClock,
   formatDuration,
   pointsKey,
+  type LatLng,
   type Leg,
   type SavedTrip,
 } from "@/lib/itinerary";
@@ -220,6 +221,7 @@ function DayView({
               loading={query.isFetching && !legs}
               error={query.isError ? "Estimate only" : undefined}
             />
+            <LiveDirectionsLink from={points[i]!} to={points[i + 1]!} />
             <div className="relative flex items-start gap-3">
               <SubwayBullet
                 label={String(i + 1)}
@@ -255,6 +257,7 @@ function DayView({
             loading={query.isFetching && !legs}
             error={query.isError ? "Estimate only" : undefined}
           />
+          <LiveDirectionsLink from={points[stops.length]!} to={points[stops.length + 1]!} />
         </li>
         <TimelineNode
           icon={<HotelIcon className="h-4 w-4" />}
@@ -264,6 +267,30 @@ function DayView({
         />
       </ol>
     </div>
+  );
+}
+
+/** Deep link into the Google Maps app/site — live navigation happens on the user's device, no API cost. */
+function mapsDirUrl(from: LatLng, to: LatLng) {
+  const params = new URLSearchParams({
+    api: "1",
+    origin: `${from.lat},${from.lng}`,
+    destination: `${to.lat},${to.lng}`,
+    travelmode: "transit",
+  });
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function LiveDirectionsLink({ from, to }: { from: LatLng; to: LatLng }) {
+  return (
+    <a
+      href={mapsDirUrl(from, to)}
+      target="_blank"
+      rel="noreferrer"
+      className="label-caps ml-11 inline-flex items-center gap-1 border-b-2 border-primary pb-0.5 text-primary hover:text-foreground"
+    >
+      <Navigation className="h-3 w-3" /> Open live directions in Google Maps
+    </a>
   );
 }
 
