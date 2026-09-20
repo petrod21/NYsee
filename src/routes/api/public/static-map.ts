@@ -13,7 +13,7 @@ const querySchema = z.object({
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 const ALLOWED_REFERER_HOST = "id-preview--154bec2c-3144-4c19-87bd-973bc4ee946c.lovable.app";
 
-function isImage(response: Response | null): response is Response {
+function isImage(response: Response | null): boolean {
   return (
     !!response &&
     response.ok &&
@@ -82,7 +82,6 @@ export const Route = createFileRoute("/api/public/static-map")({
         }
 
         if (!upstream) return new Response("Not configured", { status: 503 });
-
         if (!isImage(upstream)) {
           console.error(`Static map failed [${upstream.status}]: ${await upstream.text()}`);
           return new Response("Map unavailable", { status: 502 });

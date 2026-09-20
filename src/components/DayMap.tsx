@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapOff } from "lucide-react";
+import { ImageOff } from "lucide-react";
 
 import type { LatLng } from "@/lib/itinerary";
 
@@ -19,7 +19,7 @@ export function DayMap({ hotel, stops, label }: Props) {
   if (failed) {
     return (
       <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 border-2 border-border bg-secondary text-muted-foreground">
-        <MapOff className="h-5 w-5" />
+        <ImageOff className="h-5 w-5" />
         <p className="label-caps">Map unavailable</p>
       </div>
     );
