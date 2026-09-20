@@ -221,6 +221,7 @@ function DayView({
               loading={query.isFetching && !legs}
               error={query.isError ? "Estimate only" : undefined}
             />
+            <LiveDirectionsLink from={points[i]!} to={points[i + 1]!} />
             <div className="relative flex items-start gap-3">
               <SubwayBullet
                 label={String(i + 1)}
@@ -256,6 +257,7 @@ function DayView({
             loading={query.isFetching && !legs}
             error={query.isError ? "Estimate only" : undefined}
           />
+          <LiveDirectionsLink from={points[stops.length]!} to={points[stops.length + 1]!} />
         </li>
         <TimelineNode
           icon={<HotelIcon className="h-4 w-4" />}
