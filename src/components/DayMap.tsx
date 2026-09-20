@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapOff } from "lucide-react";
+import { ImageOff } from "lucide-react";
 
 import type { LatLng } from "@/lib/itinerary";
 
