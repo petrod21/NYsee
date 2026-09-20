@@ -126,3 +126,112 @@ export function lineColor(line: string): LineColor {
   if (["N", "Q", "R", "W"].includes(l)) return "yellow";
   return "ink";
 }
+
+/* ------------------------------------------------------------------ *
+ * Opening days & hours
+ * Minutes from midnight. `closedDays`: 0 = Sunday … 6 = Saturday.
+ * ------------------------------------------------------------------ */
+
+export interface OpeningHours {
+  /** Open 24h / outdoor space with no meaningful closing day */
+  alwaysOpen?: boolean;
+  open: number;
+  close: number;
+  closedDays: number[];
+  /** Extra caveat shown to the traveller */
+  caveat?: string;
+}
+
+const h = (hh: number, mm = 0) => hh * 60 + mm;
+
+const open247: OpeningHours = { alwaysOpen: true, open: h(6), close: h(23, 59), closedDays: [] };
+
+export const ATTRACTION_HOURS: Record<string, OpeningHours> = {
+  "central-park": open247,
+  "met-museum": { open: h(10), close: h(17), closedDays: [3] },
+  "empire-state": { open: h(9), close: h(23, 59), closedDays: [] },
+  "top-of-the-rock": { open: h(9), close: h(23, 59), closedDays: [] },
+  "statue-of-liberty": { open: h(9), close: h(17), closedDays: [], caveat: "Book the ferry ahead" },
+  "911-memorial": { open: h(10), close: h(17), closedDays: [2] },
+  "brooklyn-bridge": open247,
+  "high-line": { open: h(7), close: h(22), closedDays: [] },
+  "one-world": { open: h(9), close: h(21), closedDays: [] },
+  amnh: { open: h(10), close: h(17, 30), closedDays: [] },
+  "times-square": open247,
+  "grand-central": { open: h(5, 15), close: h(23, 59), closedDays: [] },
+  moma: { open: h(10, 30), close: h(17, 30), closedDays: [] },
+  rockefeller: { open: h(7), close: h(23, 59), closedDays: [] },
+  "ellis-island": { open: h(9), close: h(17), closedDays: [], caveat: "Same ferry as the Statue" },
+  broadway: { open: h(14), close: h(22, 30), closedDays: [1], caveat: "Most shows go dark Monday" },
+  summit: { open: h(9), close: h(22), closedDays: [] },
+  edge: { open: h(10), close: h(22), closedDays: [] },
+  "chelsea-market": { open: h(8), close: h(22), closedDays: [] },
+  "st-patricks": { open: h(6, 30), close: h(20, 45), closedDays: [] },
+  "bk-heights": open247,
+  dumbo: open247,
+  intrepid: { open: h(10), close: h(17), closedDays: [] },
+  "bryant-park": open247,
+  nypl: { open: h(10), close: h(18), closedDays: [0] },
+  "fifth-ave": { open: h(10), close: h(20), closedDays: [] },
+  "wall-street": open247,
+  "si-ferry": open247,
+  oculus: { open: h(6), close: h(23, 59), closedDays: [] },
+  chinatown: { open: h(10), close: h(22), closedDays: [] },
+  soho: { open: h(11), close: h(20), closedDays: [] },
+  "washington-sq": open247,
+  frick: { open: h(10), close: h(18), closedDays: [1, 2] },
+  guggenheim: { open: h(11), close: h(18), closedDays: [4] },
+  whitney: { open: h(10, 30), close: h(18), closedDays: [3] },
+  tenement: { open: h(10), close: h(18), closedDays: [], caveat: "Guided tours only — book ahead" },
+  bbg: { open: h(10), close: h(18), closedDays: [1] },
+  "prospect-park": open247,
+  "coney-island": { open: h(11), close: h(20), closedDays: [], caveat: "Rides run spring–fall only" },
+  "yankee-stadium": { open: h(11), close: h(22), closedDays: [], caveat: "Game days or tour times only" },
+  cloisters: { open: h(10), close: h(17), closedDays: [3] },
+  "roosevelt-tram": { open: h(6), close: h(23, 59), closedDays: [] },
+  flatiron: open247,
+  "union-square": open247,
+  "radio-city": { open: h(9, 30), close: h(17), closedDays: [], caveat: "Tours subject to events" },
+  msg: { open: h(10), close: h(18), closedDays: [], caveat: "Tours subject to events" },
+  mcny: { open: h(10), close: h(17), closedDays: [1, 2] },
+  "lincoln-center": { open: h(10), close: h(22), closedDays: [] },
+  "battery-park": open247,
+  "little-island": { open: h(6), close: h(23), closedDays: [] },
+};
+
+export const WEEKDAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+export const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+export function hoursFor(id: string): OpeningHours {
+  return ATTRACTION_HOURS[id] ?? open247;
+}
+
+/** Is this sight open on the given weekday (0 = Sunday)? */
+export function isOpenOnWeekday(id: string, weekday: number): boolean {
+  return !hoursFor(id).closedDays.includes(weekday);
+}
+
+function clock(mins: number): string {
+  const h24 = Math.floor(mins / 60) % 24;
+  const m = mins % 60;
+  const suffix = h24 >= 12 ? "PM" : "AM";
+  const hh = h24 % 12 === 0 ? 12 : h24 % 12;
+  return m ? `${hh}:${m.toString().padStart(2, "0")} ${suffix}` : `${hh} ${suffix}`;
+}
+
+/** "10 AM – 5 PM · Closed Wed" */
+export function formatOpeningHours(id: string): string {
+  const hrs = hoursFor(id);
+  if (hrs.alwaysOpen) return "Open daily, all day";
+  const range = `${clock(hrs.open)} – ${clock(hrs.close)}`;
+  if (!hrs.closedDays.length) return `${range} daily`;
+  return `${range} · Closed ${hrs.closedDays.map((d) => WEEKDAY_SHORT[d]).join(" & ")}`;
+}
