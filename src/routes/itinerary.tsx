@@ -264,6 +264,15 @@ function DayView({
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       #{stop.rank} on Tripadvisor · {stop.area}
                     </p>
+                    <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                      {formatOpeningHours(stop.id)}
+                    </p>
+                    {trip.startDate && closedReason(trip.startDate, dayIndex, stop.id) && (
+                      <p className="mt-1 flex items-center gap-1 text-xs font-black text-destructive">
+                        <TriangleAlert className="h-3.5 w-3.5" />
+                        {closedReason(trip.startDate, dayIndex, stop.id)} — consider swapping days
+                      </p>
+                    )}
                     {stop.note && <p className="mt-1 text-xs italic">{stop.note}</p>}
                   </div>
                 </div>
