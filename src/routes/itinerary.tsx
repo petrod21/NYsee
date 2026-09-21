@@ -18,6 +18,7 @@ import {
   ATTRACTION_BY_ID,
   AREA_COLOR,
   formatOpeningHours,
+  hoursFor,
   type Attraction,
 } from "@/data/attractions";
 import {
@@ -267,6 +268,11 @@ function DayView({
                     <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
                       {formatOpeningHours(stop.id)}
                     </p>
+                    {hoursFor(stop.id).caveat && (
+                      <p className="text-[11px] italic text-muted-foreground">
+                        {hoursFor(stop.id).caveat}
+                      </p>
+                    )}
                     {trip.startDate && closedReason(trip.startDate, dayIndex, stop.id) && (
                       <p className="mt-1 flex items-center gap-1 text-xs font-black text-destructive">
                         <TriangleAlert className="h-3.5 w-3.5" />
