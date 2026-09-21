@@ -6,8 +6,14 @@ import { toast } from "sonner";
 import { HotelSearch } from "@/components/HotelSearch";
 import { SubwayBullet } from "@/components/SubwayBullet";
 import { Button } from "@/components/ui/button";
-import { AREAS, AREA_COLOR, ATTRACTIONS, type Area } from "@/data/attractions";
-import { buildItinerary, type Hotel } from "@/lib/itinerary";
+import {
+  AREAS,
+  AREA_COLOR,
+  ATTRACTIONS,
+  formatOpeningHours,
+  type Area,
+} from "@/data/attractions";
+import { buildItinerary, todayISO, type Hotel } from "@/lib/itinerary";
 import { loadTrip, saveTrip } from "@/lib/trip-storage";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +38,7 @@ export const Route = createFileRoute("/")({
 function PlannerPage() {
   const navigate = useNavigate();
   const [days, setDays] = useState(3);
+  const [startDate, setStartDate] = useState<string>(todayISO());
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [areaFilter, setAreaFilter] = useState<Area | "All">("All");
@@ -42,6 +49,7 @@ function PlannerPage() {
     if (t) {
       setHasSavedTrip(true);
       setDays(t.days);
+      if (t.startDate) setStartDate(t.startDate);
       setHotel(t.hotel);
       setSelected(new Set(t.attractionIds));
     }
@@ -80,10 +88,11 @@ function PlannerPage() {
       return;
     }
     const chosen = ATTRACTIONS.filter((a) => selected.has(a.id));
-    const plan = buildItinerary(hotel, chosen, days);
+    const plan = buildItinerary(hotel, chosen, days, startDate);
     const existing = loadTrip();
     saveTrip({
       days,
+      startDate,
       hotel,
       attractionIds: chosen.map((a) => a.id),
       plan,
