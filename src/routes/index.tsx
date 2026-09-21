@@ -163,6 +163,22 @@ function PlannerPage() {
               <Plus className="h-5 w-5" />
             </button>
           </div>
+          <div className="ticket-sm mt-2 flex items-center justify-between gap-3 p-3">
+            <label htmlFor="start-date" className="label-caps text-muted-foreground">
+              First day of trip
+            </label>
+            <input
+              id="start-date"
+              type="date"
+              value={startDate}
+              min={todayISO()}
+              onChange={(e) => setStartDate(e.target.value || todayISO())}
+              className="rounded-md border-2 bg-background px-2 py-1.5 text-sm font-bold"
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            So we never schedule a museum on the day it's closed.
+          </p>
         </section>
 
         {/* Step 2 */}
@@ -245,6 +261,14 @@ function PlannerPage() {
                         <span className="truncate">{a.area}</span>
                         <span>·</span>
                         <span className="shrink-0">{Math.round(a.minutes / 30) / 2}h</span>
+                      </span>
+                      <span
+                        className={cn(
+                          "block truncate text-[11px]",
+                          on ? "text-primary-foreground/70" : "text-muted-foreground",
+                        )}
+                      >
+                        {formatOpeningHours(a.id)}
                       </span>
                       <span className="mt-1.5 flex gap-1">
                         {a.lines.slice(0, 6).map((l) => (
