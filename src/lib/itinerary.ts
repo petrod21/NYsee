@@ -129,7 +129,12 @@ function orderStops(hotel: LatLng, stops: Attraction[]): Attraction[] {
  * Groups selected attractions into geographically tight days,
  * then orders each day as a loop starting from the hotel.
  */
-export function buildItinerary(hotel: LatLng, selected: Attraction[], days: number): DayPlan[] {
+export function buildItinerary(
+  hotel: LatLng,
+  selected: Attraction[],
+  days: number,
+  startDate?: string,
+): DayPlan[] {
   const remaining = [...selected];
   const groups: Attraction[][] = [];
 
@@ -180,6 +185,8 @@ export function buildItinerary(hotel: LatLng, selected: Attraction[], days: numb
     if (!b.length) return -1;
     return haversineMeters(hotel, centroid(a)) - haversineMeters(hotel, centroid(b));
   });
+
+  if (startDate) repairClosedDays(groups, startDate);
 
   return groups.map((g, i) => ({ day: i + 1, stopIds: g.map((a) => a.id) }));
 }
