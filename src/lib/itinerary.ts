@@ -1,4 +1,4 @@
-import type { Attraction } from "@/data/attractions";
+import { isOpenOnWeekday, WEEKDAY_NAMES, type Attraction } from "@/data/attractions";
 
 export interface LatLng {
   lat: number;
