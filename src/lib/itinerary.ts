@@ -47,6 +47,8 @@ export interface DayPlan {
 
 export interface SavedTrip {
   days: number;
+  /** First day of the trip, "YYYY-MM-DD" local date */
+  startDate?: string;
   hotel: Hotel;
   attractionIds: string[];
   plan: DayPlan[];
@@ -180,6 +182,85 @@ export function buildItinerary(hotel: LatLng, selected: Attraction[], days: numb
   });
 
   return groups.map((g, i) => ({ day: i + 1, stopIds: g.map((a) => a.id) }));
+}
+
+/** Weekday (0 = Sunday) of trip day `dayIndex` (0-based), given a start date. */
+export function weekdayForDay(startDate: string, dayIndex: number): number {
+  const d = new Date(`${startDate}T12:00:00`);
+  d.setDate(d.getDate() + dayIndex);
+  return d.getDay();
+}
+
+/** "Mon, Sep 22" style label for a trip day. */
+export function dateLabelForDay(startDate: string, dayIndex: number): string {
+  const d = new Date(`${startDate}T12:00:00`);
+  d.setDate(d.getDate() + dayIndex);
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+/** Today's date as "YYYY-MM-DD", for the date picker's minimum. */
+export function todayISO(): string {
+  const d = new Date();
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/**
+ * After geographic grouping, swap stops between days so no sight is
+ * scheduled on a weekday it's closed. Stops that can't be moved (no open
+ * day left, or every open day conflicts with a swap partner) stay put and
+ * get flagged on the itinerary instead.
+ */
+function repairClosedDays(groups: Attraction[][], startDate: string): void {
+  for (let pass = 0; pass < 4; pass++) {
+    let fixed = true;
+    for (let d = 0; d < groups.length; d++) {
+      const wd = weekdayForDay(startDate, d);
+      for (let i = 0; i < groups[d]!.length; i++) {
+        const stop = groups[d]![i]!;
+        if (isOpenOnWeekday(stop.id, wd)) continue;
+        fixed = false;
+        // Try swapping with a stop on another day that is open here.
+        let moved = false;
+        for (let od = 0; od < groups.length && !moved; od++) {
+          if (od === d) continue;
+          const owd = weekdayForDay(startDate, od);
+          if (!isOpenOnWeekday(stop.id, owd)) continue;
+          for (let j = 0; j < groups[od]!.length; j++) {
+            const other = groups[od]![j]!;
+            if (isOpenOnWeekday(other.id, wd) && isOpenOnWeekday(other.id, owd)) {
+              groups[d]![i] = other;
+              groups[od]![j] = stop;
+              moved = true;
+              break;
+            }
+          }
+        }
+        if (moved) continue;
+        // Fallback: plain move into a day where it's open and has no conflicts.
+        for (let od = 0; od < groups.length && !moved; od++) {
+          if (od === d) continue;
+          const owd = weekdayForDay(startDate, od);
+          if (!isOpenOnWeekday(stop.id, owd)) continue;
+          const conflicts = groups[od]!.filter((a) => !isOpenOnWeekday(a.id, owd)).length;
+          if (conflicts > 0) continue;
+          groups[d]!.splice(i, 1);
+          groups[od]!.push(stop);
+          moved = true;
+        }
+        // If still not moved, it stays and the itinerary page flags it.
+      }
+    }
+    if (fixed) break;
+  }
+}
+
+/** Human-readable reason a stop conflicts with its scheduled day. */
+export function closedReason(startDate: string, dayIndex: number, id: string): string | null {
+  const wd = weekdayForDay(startDate, dayIndex);
+  if (isOpenOnWeekday(id, wd)) return null;
+  return `Closed on ${WEEKDAY_NAMES[wd]}s`;
 }
 
 export function pointsKey(points: LatLng[]): string {
