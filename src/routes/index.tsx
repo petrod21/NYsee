@@ -6,8 +6,14 @@ import { toast } from "sonner";
 import { HotelSearch } from "@/components/HotelSearch";
 import { SubwayBullet } from "@/components/SubwayBullet";
 import { Button } from "@/components/ui/button";
-import { AREAS, AREA_COLOR, ATTRACTIONS, type Area } from "@/data/attractions";
-import { buildItinerary, type Hotel } from "@/lib/itinerary";
+import {
+  AREAS,
+  AREA_COLOR,
+  ATTRACTIONS,
+  formatOpeningHours,
+  type Area,
+} from "@/data/attractions";
+import { buildItinerary, todayISO, type Hotel } from "@/lib/itinerary";
 import { loadTrip, saveTrip } from "@/lib/trip-storage";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +38,7 @@ export const Route = createFileRoute("/")({
 function PlannerPage() {
   const navigate = useNavigate();
   const [days, setDays] = useState(3);
+  const [startDate, setStartDate] = useState<string>(todayISO());
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [areaFilter, setAreaFilter] = useState<Area | "All">("All");
@@ -42,6 +49,7 @@ function PlannerPage() {
     if (t) {
       setHasSavedTrip(true);
       setDays(t.days);
+      if (t.startDate) setStartDate(t.startDate);
       setHotel(t.hotel);
       setSelected(new Set(t.attractionIds));
     }
@@ -80,10 +88,11 @@ function PlannerPage() {
       return;
     }
     const chosen = ATTRACTIONS.filter((a) => selected.has(a.id));
-    const plan = buildItinerary(hotel, chosen, days);
+    const plan = buildItinerary(hotel, chosen, days, startDate);
     const existing = loadTrip();
     saveTrip({
       days,
+      startDate,
       hotel,
       attractionIds: chosen.map((a) => a.id),
       plan,
@@ -154,6 +163,22 @@ function PlannerPage() {
               <Plus className="h-5 w-5" />
             </button>
           </div>
+          <div className="ticket-sm mt-2 flex items-center justify-between gap-3 p-3">
+            <label htmlFor="start-date" className="label-caps text-muted-foreground">
+              First day of trip
+            </label>
+            <input
+              id="start-date"
+              type="date"
+              value={startDate}
+              min={todayISO()}
+              onChange={(e) => setStartDate(e.target.value || todayISO())}
+              className="rounded-md border-2 bg-background px-2 py-1.5 text-sm font-bold"
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            So we never schedule a museum on the day it's closed.
+          </p>
         </section>
 
         {/* Step 2 */}
@@ -236,6 +261,14 @@ function PlannerPage() {
                         <span className="truncate">{a.area}</span>
                         <span>·</span>
                         <span className="shrink-0">{Math.round(a.minutes / 30) / 2}h</span>
+                      </span>
+                      <span
+                        className={cn(
+                          "block truncate text-[11px]",
+                          on ? "text-primary-foreground/70" : "text-muted-foreground",
+                        )}
+                      >
+                        {formatOpeningHours(a.id)}
                       </span>
                       <span className="mt-1.5 flex gap-1">
                         {a.lines.slice(0, 6).map((l) => (

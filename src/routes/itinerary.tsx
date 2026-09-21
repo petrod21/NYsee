@@ -1,14 +1,29 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Clock, Hotel as HotelIcon, Navigation, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  Hotel as HotelIcon,
+  Navigation,
+  RefreshCw,
+  TriangleAlert,
+} from "lucide-react";
 
 import { DayMap } from "@/components/DayMap";
 import { LegDirections } from "@/components/LegDirections";
 import { SubwayBullet } from "@/components/SubwayBullet";
 import { Button } from "@/components/ui/button";
-import { ATTRACTION_BY_ID, AREA_COLOR, type Attraction } from "@/data/attractions";
 import {
+  ATTRACTION_BY_ID,
+  AREA_COLOR,
+  formatOpeningHours,
+  hoursFor,
+  type Attraction,
+} from "@/data/attractions";
+import {
+  closedReason,
+  dateLabelForDay,
   DAY_START_MINUTES,
   estimateMinutes,
   formatClock,
@@ -94,6 +109,16 @@ function ItineraryPage() {
               >
                 <span className="label-caps">Day</span>
                 <span className="display text-2xl">{p.day}</span>
+                {trip.startDate && (
+                  <span
+                    className={cn(
+                      "text-[11px] font-bold",
+                      i === day ? "text-primary-foreground/80" : "text-muted-foreground",
+                    )}
+                  >
+                    {dateLabelForDay(trip.startDate, i)}
+                  </span>
+                )}
                 <span
                   className={cn(
                     "text-[11px]",
@@ -101,6 +126,10 @@ function ItineraryPage() {
                   )}
                 >
                   {p.stopIds.length} {p.stopIds.length === 1 ? "stop" : "stops"}
+                  {trip.startDate &&
+                  p.stopIds.some((id) => closedReason(trip.startDate!, i, id))
+                    ? " · ⚠"
+                    : ""}
                 </span>
               </button>
             ))}
@@ -236,6 +265,20 @@ function DayView({
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       #{stop.rank} on Tripadvisor · {stop.area}
                     </p>
+                    <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                      {formatOpeningHours(stop.id)}
+                    </p>
+                    {hoursFor(stop.id).caveat && (
+                      <p className="text-[11px] italic text-muted-foreground">
+                        {hoursFor(stop.id).caveat}
+                      </p>
+                    )}
+                    {trip.startDate && closedReason(trip.startDate, dayIndex, stop.id) && (
+                      <p className="mt-1 flex items-center gap-1 text-xs font-black text-destructive">
+                        <TriangleAlert className="h-3.5 w-3.5" />
+                        {closedReason(trip.startDate, dayIndex, stop.id)} — consider swapping days
+                      </p>
+                    )}
                     {stop.note && <p className="mt-1 text-xs italic">{stop.note}</p>}
                   </div>
                 </div>
