@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check, Minus, Plus } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import { HotelSearch } from "@/components/HotelSearch";
@@ -13,7 +13,17 @@ import {
   formatOpeningHours,
   type Area,
 } from "@/data/attractions";
-import { buildItinerary, todayISO, type Hotel } from "@/lib/itinerary";
+import {
+  addDays,
+  buildItinerary,
+  dateLabelForDay,
+  daysBetween,
+  PACE_LABEL,
+  PACE_MINUTES,
+  todayISO,
+  type DayPace,
+  type Hotel,
+} from "@/lib/itinerary";
 import { loadTrip, saveTrip } from "@/lib/trip-storage";
 import { cn } from "@/lib/utils";
 
