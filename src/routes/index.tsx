@@ -183,44 +183,71 @@ function PlannerPage() {
       <div className="mx-auto max-w-3xl space-y-8 px-5 pt-8">
         {/* Step 1 */}
         <section>
-          <StepHeading n={1} title="Trip length" />
-          <div className="ticket-sm mt-3 flex items-center justify-between p-3">
-            <button
-              type="button"
-              onClick={() => setDays((d) => Math.max(1, d - 1))}
-              className="flex h-11 w-11 items-center justify-center rounded-full border-2 hover:bg-secondary"
-              aria-label="Fewer days"
-            >
-              <Minus className="h-5 w-5" />
-            </button>
-            <div className="text-center">
-              <div className="display text-5xl">{days}</div>
-              <div className="label-caps text-muted-foreground">{days === 1 ? "day" : "days"}</div>
+          <StepHeading n={1} title="Your dates" />
+          <div className="ticket-sm mt-3 grid gap-3 p-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="start-date" className="label-caps block text-muted-foreground">
+                Arrive
+              </label>
+              <input
+                id="start-date"
+                type="date"
+                value={startDate}
+                min={todayISO()}
+                onChange={(e) => changeStart(e.target.value)}
+                className="mt-1 w-full rounded-md border-2 bg-background px-2 py-2 text-sm font-bold"
+              />
             </div>
-            <button
-              type="button"
-              onClick={() => setDays((d) => Math.min(10, d + 1))}
-              className="flex h-11 w-11 items-center justify-center rounded-full border-2 hover:bg-secondary"
-              aria-label="More days"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="ticket-sm mt-2 flex items-center justify-between gap-3 p-3">
-            <label htmlFor="start-date" className="label-caps text-muted-foreground">
-              First day of trip
-            </label>
-            <input
-              id="start-date"
-              type="date"
-              value={startDate}
-              min={todayISO()}
-              onChange={(e) => setStartDate(e.target.value || todayISO())}
-              className="rounded-md border-2 bg-background px-2 py-1.5 text-sm font-bold"
-            />
+            <div>
+              <label htmlFor="end-date" className="label-caps block text-muted-foreground">
+                Leave
+              </label>
+              <input
+                id="end-date"
+                type="date"
+                value={endDate}
+                min={startDate}
+                onChange={(e) => setEndDate(e.target.value || startDate)}
+                className="mt-1 w-full rounded-md border-2 bg-background px-2 py-2 text-sm font-bold"
+              />
+            </div>
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            So we never schedule a museum on the day it's closed.
+            {days} {days === 1 ? "day" : "days"} in New York. Real dates mean we never schedule a
+            museum on the day it's closed.
+          </p>
+
+          <h3 className="label-caps mt-4 text-muted-foreground">How long each day?</h3>
+          <ul className="mt-2 space-y-2">
+            {Array.from({ length: days }, (_, i) => (
+              <li key={i} className="ticket-sm flex flex-wrap items-center justify-between gap-2 p-3">
+                <div>
+                  <div className="font-black leading-tight">{dateLabelForDay(startDate, i)}</div>
+                  <div className="text-xs text-muted-foreground">Day {i + 1}</div>
+                </div>
+                <div className="flex gap-1.5">
+                  {(["full", "half", "short"] as DayPace[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPace(i, p)}
+                      aria-pressed={(paces[i] ?? "full") === p}
+                      className={cn(
+                        "rounded-full border-2 px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors",
+                        (paces[i] ?? "full") === p
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card hover:bg-secondary",
+                      )}
+                    >
+                      {PACE_LABEL[p]}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Travel days and show nights get fewer stops.
           </p>
         </section>
 
