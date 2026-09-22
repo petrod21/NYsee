@@ -170,25 +170,35 @@ function orderStops(hotel: LatLng, stops: Attraction[]): Attraction[] {
 }
 
 /**
- * Groups selected attractions into geographically tight days,
- * then orders each day as a loop starting from the hotel.
+ * Groups selected attractions into geographically tight days sized to each
+ * day's available time, then orders each day as a loop from the hotel.
  */
 export function buildItinerary(
   hotel: LatLng,
   selected: Attraction[],
   days: number,
   startDate?: string,
+  paces?: DayPace[],
 ): DayPlan[] {
-  const remaining = [...selected];
-  const groups: Attraction[][] = [];
+  const budgets = Array.from({ length: days }, (_, i) => PACE_MINUTES[paces?.[i] ?? "full"]);
+  // Fill the roomiest days first so short days end up with fewer stops.
+  const dayOrder = budgets
+    .map((b, i) => ({ b, i }))
+    .sort((x, y) => y.b - x.b || x.i - y.i)
+    .map((x) => x.i);
 
-  for (let d = 0; d < days; d++) {
-    const daysLeft = days - d;
+  const remaining = [...selected];
+  const built: { day: number; stops: Attraction[] }[] = [];
+
+  dayOrder.forEach((dayIdx, position) => {
+    const budget = budgets[dayIdx]!;
     if (remaining.length === 0) {
-      groups.push([]);
-      continue;
+      built.push({ day: dayIdx, stops: [] });
+      return;
     }
-    const target = Math.ceil(remaining.length / daysLeft);
+    const budgetLeft = dayOrder.slice(position).reduce((s, i) => s + budgets[i]!, 0);
+    const share = budget / budgetLeft;
+    const target = Math.max(1, Math.round(remaining.length * share));
 
     // Seed each day with the unplanned stop farthest from the hotel so
     // outlying sights get grouped with their neighbours.
@@ -204,6 +214,7 @@ export function buildItinerary(
     const stops: Attraction[] = [remaining.splice(seedIdx, 1)[0]!];
     let minutes = stops[0]!.minutes;
 
+    const daysLeft = days - position;
     while (stops.length < target && remaining.length) {
       const c = centroid(stops);
       let bi = 0;
@@ -216,18 +227,16 @@ export function buildItinerary(
         }
       });
       const next = remaining[bi]!;
-      if (minutes + next.minutes > DAY_BUDGET_MINUTES && stops.length >= 2 && daysLeft > 1) break;
+      if (minutes + next.minutes > budget && daysLeft > 1) break;
       stops.push(remaining.splice(bi, 1)[0]!);
       minutes += next.minutes;
     }
-    groups.push(orderStops(hotel, stops));
-  }
+    built.push({ day: dayIdx, stops: orderStops(hotel, stops) });
+  });
 
-  // Closest cluster to the hotel becomes Day 1.
-  groups.sort((a, b) => {
-    if (!a.length) return 1;
-    if (!b.length) return -1;
-    return haversineMeters(hotel, centroid(a)) - haversineMeters(hotel, centroid(b));
+  const groups: Attraction[][] = Array.from({ length: days }, () => []);
+  built.forEach((b) => {
+    groups[b.day] = b.stops;
   });
 
   if (startDate) repairClosedDays(groups, startDate);
