@@ -369,8 +369,17 @@ function PlannerPage() {
             <div className="font-black">
               {selected.size} {selected.size === 1 ? "stop" : "stops"}
             </div>
-            <div className="text-xs text-muted-foreground">
-              {selected.size ? `≈ ${perDay}h of sightseeing per day` : "Pick some attractions"}
+            <div
+              className={cn(
+                "text-xs",
+                overbooked && selected.size ? "font-bold text-destructive" : "text-muted-foreground",
+              )}
+            >
+              {!selected.size
+                ? "Pick some attractions"
+                : overbooked
+                  ? `${Math.round(totalMinutes / 60)}h of sights vs ${Math.round(capacityMinutes / 60)}h available`
+                  : `${Math.round(totalMinutes / 60)}h of sights fits your ${Math.round(capacityMinutes / 60)}h`}
             </div>
           </div>
           <Button variant="mta" size="lg" onClick={build} disabled={!ready}>
