@@ -202,6 +202,8 @@ function DayView({
     );
   }
 
+  const weekday = trip.startDate ? weekdayForDay(trip.startDate, dayIndex) : null;
+
   // Build the time schedule
   let clock = DAY_START_MINUTES;
   const schedule = stops.map((stop, i) => {
@@ -221,8 +223,9 @@ function DayView({
     <div className="space-y-5">
       <DayMap hotel={trip.hotel} stops={stops} label={`Day ${plan.day}`} />
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="Stops" value={String(stops.length)} />
+        <Stat label="Plan" value={PACE_SHORT[paceFor(trip, dayIndex)]} />
         <Stat label="Travel" value={formatDuration(totalTravel)} />
         <Stat label="Back by" value={formatClock(endOfDay)} />
       </div>
