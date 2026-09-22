@@ -47,23 +47,49 @@ export const Route = createFileRoute("/")({
 
 function PlannerPage() {
   const navigate = useNavigate();
-  const [days, setDays] = useState(3);
   const [startDate, setStartDate] = useState<string>(todayISO());
+  const [endDate, setEndDate] = useState<string>(() => addDays(todayISO(), 2));
+  const [paces, setPaces] = useState<DayPace[]>(["full", "full", "full"]);
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [areaFilter, setAreaFilter] = useState<Area | "All">("All");
   const [hasSavedTrip, setHasSavedTrip] = useState(false);
 
+  const days = daysBetween(startDate, endDate);
+
   useEffect(() => {
     const t = loadTrip();
     if (t) {
       setHasSavedTrip(true);
-      setDays(t.days);
-      if (t.startDate) setStartDate(t.startDate);
+      const start = t.startDate ?? todayISO();
+      setStartDate(start);
+      setEndDate(t.endDate ?? addDays(start, Math.max(0, t.days - 1)));
+      if (t.paces?.length) setPaces(t.paces);
       setHotel(t.hotel);
       setSelected(new Set(t.attractionIds));
     }
   }, []);
+
+  // Keep one pace entry per date.
+  useEffect(() => {
+    setPaces((prev) =>
+      Array.from({ length: days }, (_, i) => prev[i] ?? "full"),
+    );
+  }, [days]);
+
+  function changeStart(value: string) {
+    const next = value || todayISO();
+    setStartDate(next);
+    if (new Date(`${endDate}T12:00:00`) < new Date(`${next}T12:00:00`)) setEndDate(next);
+  }
+
+  function setPace(i: number, pace: DayPace) {
+    setPaces((prev) => {
+      const next = Array.from({ length: days }, (_, k) => prev[k] ?? "full");
+      next[i] = pace;
+      return next;
+    });
+  }
 
   const visible = useMemo(
     () => (areaFilter === "All" ? ATTRACTIONS : ATTRACTIONS.filter((a) => a.area === areaFilter)),
@@ -74,6 +100,10 @@ function PlannerPage() {
     () => ATTRACTIONS.filter((a) => selected.has(a.id)).reduce((s, a) => s + a.minutes, 0),
     [selected],
   );
+
+  const capacityMinutes = paces
+    .slice(0, days)
+    .reduce((s, p) => s + PACE_MINUTES[p], 0);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -97,12 +127,15 @@ function PlannerPage() {
       toast.error("Pick at least one attraction.");
       return;
     }
+    const dayPaces = Array.from({ length: days }, (_, i) => paces[i] ?? "full");
     const chosen = ATTRACTIONS.filter((a) => selected.has(a.id));
-    const plan = buildItinerary(hotel, chosen, days, startDate);
+    const plan = buildItinerary(hotel, chosen, days, startDate, dayPaces);
     const existing = loadTrip();
     saveTrip({
       days,
       startDate,
+      endDate,
+      paces: dayPaces,
       hotel,
       attractionIds: chosen.map((a) => a.id),
       plan,
@@ -112,7 +145,7 @@ function PlannerPage() {
     navigate({ to: "/itinerary" });
   }
 
-  const perDay = Math.round(totalMinutes / 60 / days);
+  const overbooked = totalMinutes > capacityMinutes;
   const ready = !!hotel && selected.size > 0;
 
   return (
