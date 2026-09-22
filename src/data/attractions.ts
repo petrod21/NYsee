@@ -140,11 +140,11 @@ export interface DayRange {
 
 export interface OpeningHours {
   /** Public outdoor space with no meaningful closing day */
-  alwaysOpen?: boolean;
+  alwaysOpen?: boolean | undefined;
   /** 0 = Sunday … 6 = Saturday; null means closed that day */
   week: (DayRange | null)[];
   /** Extra caveat shown to the traveller */
-  caveat?: string;
+  caveat?: string | undefined;
 }
 
 const h = (hh: number, mm = 0) => hh * 60 + mm;
@@ -158,8 +158,8 @@ function hours(spec: {
   close: number;
   closed?: number[];
   per?: Partial<Record<number, [number, number]>>;
-  caveat?: string;
-  alwaysOpen?: boolean;
+  caveat?: string | undefined;
+  alwaysOpen?: boolean | undefined;
 }): OpeningHours {
   const week: (DayRange | null)[] = [];
   for (let d = 0; d < 7; d++) {
