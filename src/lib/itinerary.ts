@@ -45,10 +45,35 @@ export interface DayPlan {
   stopIds: string[];
 }
 
+/** How much sightseeing time a given date has. */
+export type DayPace = "full" | "half" | "short";
+
+export const PACE_MINUTES: Record<DayPace, number> = {
+  full: 480,
+  half: 270,
+  short: 150,
+};
+
+export const PACE_LABEL: Record<DayPace, string> = {
+  full: "Full day",
+  half: "Half day",
+  short: "3 hours or less",
+};
+
+export const PACE_SHORT: Record<DayPace, string> = {
+  full: "Full day",
+  half: "Half day",
+  short: "≤ 3 hrs",
+};
+
 export interface SavedTrip {
   days: number;
   /** First day of the trip, "YYYY-MM-DD" local date */
   startDate?: string;
+  /** Last day of the trip, "YYYY-MM-DD" local date */
+  endDate?: string;
+  /** Time available per trip day, index 0 = first day */
+  paces?: DayPace[];
   hotel: Hotel;
   attractionIds: string[];
   plan: DayPlan[];
@@ -56,9 +81,28 @@ export interface SavedTrip {
   createdAt: number;
 }
 
-/** Sightseeing minutes per day before we start a new day. */
-const DAY_BUDGET_MINUTES = 480;
 export const DAY_START_MINUTES = 9 * 60;
+
+export function paceFor(trip: SavedTrip, dayIndex: number): DayPace {
+  return trip.paces?.[dayIndex] ?? "full";
+}
+
+/** Inclusive number of days between two "YYYY-MM-DD" dates. */
+export function daysBetween(startDate: string, endDate: string): number {
+  const a = new Date(`${startDate}T12:00:00`).getTime();
+  const b = new Date(`${endDate}T12:00:00`).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b)) return 1;
+  return Math.max(1, Math.round((b - a) / 86400000) + 1);
+}
+
+/** Add `n` days to a "YYYY-MM-DD" date. */
+export function addDays(date: string, n: number): string {
+  const d = new Date(`${date}T12:00:00`);
+  d.setDate(d.getDate() + n);
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 export function haversineMeters(a: LatLng, b: LatLng): number {
   const R = 6371000;
