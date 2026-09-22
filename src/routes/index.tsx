@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check, Minus, Plus } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import { HotelSearch } from "@/components/HotelSearch";
@@ -13,7 +13,17 @@ import {
   formatOpeningHours,
   type Area,
 } from "@/data/attractions";
-import { buildItinerary, todayISO, type Hotel } from "@/lib/itinerary";
+import {
+  addDays,
+  buildItinerary,
+  dateLabelForDay,
+  daysBetween,
+  PACE_LABEL,
+  PACE_MINUTES,
+  todayISO,
+  type DayPace,
+  type Hotel,
+} from "@/lib/itinerary";
 import { loadTrip, saveTrip } from "@/lib/trip-storage";
 import { cn } from "@/lib/utils";
 
@@ -37,23 +47,49 @@ export const Route = createFileRoute("/")({
 
 function PlannerPage() {
   const navigate = useNavigate();
-  const [days, setDays] = useState(3);
   const [startDate, setStartDate] = useState<string>(todayISO());
+  const [endDate, setEndDate] = useState<string>(() => addDays(todayISO(), 2));
+  const [paces, setPaces] = useState<DayPace[]>(["full", "full", "full"]);
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [areaFilter, setAreaFilter] = useState<Area | "All">("All");
   const [hasSavedTrip, setHasSavedTrip] = useState(false);
 
+  const days = daysBetween(startDate, endDate);
+
   useEffect(() => {
     const t = loadTrip();
     if (t) {
       setHasSavedTrip(true);
-      setDays(t.days);
-      if (t.startDate) setStartDate(t.startDate);
+      const start = t.startDate ?? todayISO();
+      setStartDate(start);
+      setEndDate(t.endDate ?? addDays(start, Math.max(0, t.days - 1)));
+      if (t.paces?.length) setPaces(t.paces);
       setHotel(t.hotel);
       setSelected(new Set(t.attractionIds));
     }
   }, []);
+
+  // Keep one pace entry per date.
+  useEffect(() => {
+    setPaces((prev) =>
+      Array.from({ length: days }, (_, i) => prev[i] ?? "full"),
+    );
+  }, [days]);
+
+  function changeStart(value: string) {
+    const next = value || todayISO();
+    setStartDate(next);
+    if (new Date(`${endDate}T12:00:00`) < new Date(`${next}T12:00:00`)) setEndDate(next);
+  }
+
+  function setPace(i: number, pace: DayPace) {
+    setPaces((prev) => {
+      const next = Array.from({ length: days }, (_, k) => prev[k] ?? "full");
+      next[i] = pace;
+      return next;
+    });
+  }
 
   const visible = useMemo(
     () => (areaFilter === "All" ? ATTRACTIONS : ATTRACTIONS.filter((a) => a.area === areaFilter)),
@@ -64,6 +100,10 @@ function PlannerPage() {
     () => ATTRACTIONS.filter((a) => selected.has(a.id)).reduce((s, a) => s + a.minutes, 0),
     [selected],
   );
+
+  const capacityMinutes = paces
+    .slice(0, days)
+    .reduce((s, p) => s + PACE_MINUTES[p], 0);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -87,12 +127,15 @@ function PlannerPage() {
       toast.error("Pick at least one attraction.");
       return;
     }
+    const dayPaces = Array.from({ length: days }, (_, i) => paces[i] ?? "full");
     const chosen = ATTRACTIONS.filter((a) => selected.has(a.id));
-    const plan = buildItinerary(hotel, chosen, days, startDate);
+    const plan = buildItinerary(hotel, chosen, days, startDate, dayPaces);
     const existing = loadTrip();
     saveTrip({
       days,
       startDate,
+      endDate,
+      paces: dayPaces,
       hotel,
       attractionIds: chosen.map((a) => a.id),
       plan,
@@ -102,7 +145,7 @@ function PlannerPage() {
     navigate({ to: "/itinerary" });
   }
 
-  const perDay = Math.round(totalMinutes / 60 / days);
+  const overbooked = totalMinutes > capacityMinutes;
   const ready = !!hotel && selected.size > 0;
 
   return (
@@ -140,44 +183,71 @@ function PlannerPage() {
       <div className="mx-auto max-w-3xl space-y-8 px-5 pt-8">
         {/* Step 1 */}
         <section>
-          <StepHeading n={1} title="Trip length" />
-          <div className="ticket-sm mt-3 flex items-center justify-between p-3">
-            <button
-              type="button"
-              onClick={() => setDays((d) => Math.max(1, d - 1))}
-              className="flex h-11 w-11 items-center justify-center rounded-full border-2 hover:bg-secondary"
-              aria-label="Fewer days"
-            >
-              <Minus className="h-5 w-5" />
-            </button>
-            <div className="text-center">
-              <div className="display text-5xl">{days}</div>
-              <div className="label-caps text-muted-foreground">{days === 1 ? "day" : "days"}</div>
+          <StepHeading n={1} title="Your dates" />
+          <div className="ticket-sm mt-3 grid gap-3 p-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="start-date" className="label-caps block text-muted-foreground">
+                Arrive
+              </label>
+              <input
+                id="start-date"
+                type="date"
+                value={startDate}
+                min={todayISO()}
+                onChange={(e) => changeStart(e.target.value)}
+                className="mt-1 w-full rounded-md border-2 bg-background px-2 py-2 text-sm font-bold"
+              />
             </div>
-            <button
-              type="button"
-              onClick={() => setDays((d) => Math.min(10, d + 1))}
-              className="flex h-11 w-11 items-center justify-center rounded-full border-2 hover:bg-secondary"
-              aria-label="More days"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="ticket-sm mt-2 flex items-center justify-between gap-3 p-3">
-            <label htmlFor="start-date" className="label-caps text-muted-foreground">
-              First day of trip
-            </label>
-            <input
-              id="start-date"
-              type="date"
-              value={startDate}
-              min={todayISO()}
-              onChange={(e) => setStartDate(e.target.value || todayISO())}
-              className="rounded-md border-2 bg-background px-2 py-1.5 text-sm font-bold"
-            />
+            <div>
+              <label htmlFor="end-date" className="label-caps block text-muted-foreground">
+                Leave
+              </label>
+              <input
+                id="end-date"
+                type="date"
+                value={endDate}
+                min={startDate}
+                onChange={(e) => setEndDate(e.target.value || startDate)}
+                className="mt-1 w-full rounded-md border-2 bg-background px-2 py-2 text-sm font-bold"
+              />
+            </div>
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            So we never schedule a museum on the day it's closed.
+            {days} {days === 1 ? "day" : "days"} in New York. Real dates mean we never schedule a
+            museum on the day it's closed.
+          </p>
+
+          <h3 className="label-caps mt-4 text-muted-foreground">How long each day?</h3>
+          <ul className="mt-2 space-y-2">
+            {Array.from({ length: days }, (_, i) => (
+              <li key={i} className="ticket-sm flex flex-wrap items-center justify-between gap-2 p-3">
+                <div>
+                  <div className="font-black leading-tight">{dateLabelForDay(startDate, i)}</div>
+                  <div className="text-xs text-muted-foreground">Day {i + 1}</div>
+                </div>
+                <div className="flex gap-1.5">
+                  {(["full", "half", "short"] as DayPace[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPace(i, p)}
+                      aria-pressed={(paces[i] ?? "full") === p}
+                      className={cn(
+                        "rounded-full border-2 px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors",
+                        (paces[i] ?? "full") === p
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card hover:bg-secondary",
+                      )}
+                    >
+                      {PACE_LABEL[p]}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Travel days and show nights get fewer stops.
           </p>
         </section>
 
@@ -299,8 +369,17 @@ function PlannerPage() {
             <div className="font-black">
               {selected.size} {selected.size === 1 ? "stop" : "stops"}
             </div>
-            <div className="text-xs text-muted-foreground">
-              {selected.size ? `≈ ${perDay}h of sightseeing per day` : "Pick some attractions"}
+            <div
+              className={cn(
+                "text-xs",
+                overbooked && selected.size ? "font-bold text-destructive" : "text-muted-foreground",
+              )}
+            >
+              {!selected.size
+                ? "Pick some attractions"
+                : overbooked
+                  ? `${Math.round(totalMinutes / 60)}h of sights vs ${Math.round(capacityMinutes / 60)}h available`
+                  : `${Math.round(totalMinutes / 60)}h of sights fits your ${Math.round(capacityMinutes / 60)}h`}
             </div>
           </div>
           <Button variant="mta" size="lg" onClick={build} disabled={!ready}>

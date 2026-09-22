@@ -45,10 +45,35 @@ export interface DayPlan {
   stopIds: string[];
 }
 
+/** How much sightseeing time a given date has. */
+export type DayPace = "full" | "half" | "short";
+
+export const PACE_MINUTES: Record<DayPace, number> = {
+  full: 480,
+  half: 270,
+  short: 150,
+};
+
+export const PACE_LABEL: Record<DayPace, string> = {
+  full: "Full day",
+  half: "Half day",
+  short: "3 hours or less",
+};
+
+export const PACE_SHORT: Record<DayPace, string> = {
+  full: "Full day",
+  half: "Half day",
+  short: "≤ 3 hrs",
+};
+
 export interface SavedTrip {
   days: number;
   /** First day of the trip, "YYYY-MM-DD" local date */
   startDate?: string;
+  /** Last day of the trip, "YYYY-MM-DD" local date */
+  endDate?: string;
+  /** Time available per trip day, index 0 = first day */
+  paces?: DayPace[];
   hotel: Hotel;
   attractionIds: string[];
   plan: DayPlan[];
@@ -56,9 +81,28 @@ export interface SavedTrip {
   createdAt: number;
 }
 
-/** Sightseeing minutes per day before we start a new day. */
-const DAY_BUDGET_MINUTES = 480;
 export const DAY_START_MINUTES = 9 * 60;
+
+export function paceFor(trip: SavedTrip, dayIndex: number): DayPace {
+  return trip.paces?.[dayIndex] ?? "full";
+}
+
+/** Inclusive number of days between two "YYYY-MM-DD" dates. */
+export function daysBetween(startDate: string, endDate: string): number {
+  const a = new Date(`${startDate}T12:00:00`).getTime();
+  const b = new Date(`${endDate}T12:00:00`).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b)) return 1;
+  return Math.max(1, Math.round((b - a) / 86400000) + 1);
+}
+
+/** Add `n` days to a "YYYY-MM-DD" date. */
+export function addDays(date: string, n: number): string {
+  const d = new Date(`${date}T12:00:00`);
+  d.setDate(d.getDate() + n);
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 export function haversineMeters(a: LatLng, b: LatLng): number {
   const R = 6371000;
@@ -126,25 +170,35 @@ function orderStops(hotel: LatLng, stops: Attraction[]): Attraction[] {
 }
 
 /**
- * Groups selected attractions into geographically tight days,
- * then orders each day as a loop starting from the hotel.
+ * Groups selected attractions into geographically tight days sized to each
+ * day's available time, then orders each day as a loop from the hotel.
  */
 export function buildItinerary(
   hotel: LatLng,
   selected: Attraction[],
   days: number,
   startDate?: string,
+  paces?: DayPace[],
 ): DayPlan[] {
-  const remaining = [...selected];
-  const groups: Attraction[][] = [];
+  const budgets = Array.from({ length: days }, (_, i) => PACE_MINUTES[paces?.[i] ?? "full"]);
+  // Fill the roomiest days first so short days end up with fewer stops.
+  const dayOrder = budgets
+    .map((b, i) => ({ b, i }))
+    .sort((x, y) => y.b - x.b || x.i - y.i)
+    .map((x) => x.i);
 
-  for (let d = 0; d < days; d++) {
-    const daysLeft = days - d;
+  const remaining = [...selected];
+  const built: { day: number; stops: Attraction[] }[] = [];
+
+  dayOrder.forEach((dayIdx, position) => {
+    const budget = budgets[dayIdx]!;
     if (remaining.length === 0) {
-      groups.push([]);
-      continue;
+      built.push({ day: dayIdx, stops: [] });
+      return;
     }
-    const target = Math.ceil(remaining.length / daysLeft);
+    const budgetLeft = dayOrder.slice(position).reduce((s, i) => s + budgets[i]!, 0);
+    const share = budget / budgetLeft;
+    const target = Math.max(1, Math.round(remaining.length * share));
 
     // Seed each day with the unplanned stop farthest from the hotel so
     // outlying sights get grouped with their neighbours.
@@ -160,6 +214,7 @@ export function buildItinerary(
     const stops: Attraction[] = [remaining.splice(seedIdx, 1)[0]!];
     let minutes = stops[0]!.minutes;
 
+    const daysLeft = days - position;
     while (stops.length < target && remaining.length) {
       const c = centroid(stops);
       let bi = 0;
@@ -172,19 +227,33 @@ export function buildItinerary(
         }
       });
       const next = remaining[bi]!;
-      if (minutes + next.minutes > DAY_BUDGET_MINUTES && stops.length >= 2 && daysLeft > 1) break;
+      if (minutes + next.minutes > budget && daysLeft > 1) break;
       stops.push(remaining.splice(bi, 1)[0]!);
       minutes += next.minutes;
     }
-    groups.push(orderStops(hotel, stops));
-  }
-
-  // Closest cluster to the hotel becomes Day 1.
-  groups.sort((a, b) => {
-    if (!a.length) return 1;
-    if (!b.length) return -1;
-    return haversineMeters(hotel, centroid(a)) - haversineMeters(hotel, centroid(b));
+    built.push({ day: dayIdx, stops: orderStops(hotel, stops) });
   });
+
+  const groups: Attraction[][] = Array.from({ length: days }, () => []);
+  built.forEach((b) => {
+    groups[b.day] = b.stops;
+  });
+
+  // Anything left over (short days filled up) goes on the roomiest day.
+  while (remaining.length) {
+    const stop = remaining.shift()!;
+    let bestDay = dayOrder[0]!;
+    let bestSlack = -Infinity;
+    dayOrder.forEach((i) => {
+      const used = groups[i]!.reduce((s, a) => s + a.minutes, 0);
+      const slack = budgets[i]! - used;
+      if (slack > bestSlack) {
+        bestSlack = slack;
+        bestDay = i;
+      }
+    });
+    groups[bestDay] = orderStops(hotel, [...groups[bestDay]!, stop]);
+  }
 
   if (startDate) repairClosedDays(groups, startDate);
 

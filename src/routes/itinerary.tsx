@@ -18,7 +18,9 @@ import {
   ATTRACTION_BY_ID,
   AREA_COLOR,
   formatOpeningHours,
+  formatRange,
   hoursFor,
+  openRangeOn,
   type Attraction,
 } from "@/data/attractions";
 import {
@@ -28,7 +30,10 @@ import {
   estimateMinutes,
   formatClock,
   formatDuration,
+  paceFor,
+  PACE_SHORT,
   pointsKey,
+  weekdayForDay,
   type LatLng,
   type Leg,
   type SavedTrip,
@@ -125,7 +130,8 @@ function ItineraryPage() {
                     i === day ? "text-primary-foreground/70" : "text-muted-foreground",
                   )}
                 >
-                  {p.stopIds.length} {p.stopIds.length === 1 ? "stop" : "stops"}
+                  {p.stopIds.length} {p.stopIds.length === 1 ? "stop" : "stops"} ·{" "}
+                  {PACE_SHORT[paceFor(trip, i)]}
                   {trip.startDate &&
                   p.stopIds.some((id) => closedReason(trip.startDate!, i, id))
                     ? " · ⚠"
@@ -196,6 +202,8 @@ function DayView({
     );
   }
 
+  const weekday = trip.startDate ? weekdayForDay(trip.startDate, dayIndex) : null;
+
   // Build the time schedule
   let clock = DAY_START_MINUTES;
   const schedule = stops.map((stop, i) => {
@@ -215,8 +223,9 @@ function DayView({
     <div className="space-y-5">
       <DayMap hotel={trip.hotel} stops={stops} label={`Day ${plan.day}`} />
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="Stops" value={String(stops.length)} />
+        <Stat label="Plan" value={PACE_SHORT[paceFor(trip, dayIndex)]} />
         <Stat label="Travel" value={formatDuration(totalTravel)} />
         <Stat label="Back by" value={formatClock(endOfDay)} />
       </div>
@@ -279,6 +288,25 @@ function DayView({
                         {closedReason(trip.startDate, dayIndex, stop.id)} — consider swapping days
                       </p>
                     )}
+                    {weekday !== null &&
+                      (() => {
+                        const r = openRangeOn(stop.id, weekday);
+                        if (!r || hoursFor(stop.id).alwaysOpen) return null;
+                        if (arrive < r.open)
+                          return (
+                            <p className="mt-1 text-xs font-bold text-muted-foreground">
+                              Doesn't open until {formatRange(r).split(" – ")[0]} today
+                            </p>
+                          );
+                        if (arrive > r.close - 30)
+                          return (
+                            <p className="mt-1 flex items-center gap-1 text-xs font-black text-destructive">
+                              <TriangleAlert className="h-3.5 w-3.5" />
+                              Closes at {formatRange(r).split(" – ")[1]} today — visit earlier
+                            </p>
+                          );
+                        return null;
+                      })()}
                     {stop.note && <p className="mt-1 text-xs italic">{stop.note}</p>}
                   </div>
                 </div>
