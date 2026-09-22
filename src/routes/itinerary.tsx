@@ -288,6 +288,25 @@ function DayView({
                         {closedReason(trip.startDate, dayIndex, stop.id)} — consider swapping days
                       </p>
                     )}
+                    {weekday !== null &&
+                      (() => {
+                        const r = openRangeOn(stop.id, weekday);
+                        if (!r || hoursFor(stop.id).alwaysOpen) return null;
+                        if (arrive < r.open)
+                          return (
+                            <p className="mt-1 text-xs font-bold text-muted-foreground">
+                              Doesn't open until {formatRange(r).split(" – ")[0]} today
+                            </p>
+                          );
+                        if (arrive > r.close - 30)
+                          return (
+                            <p className="mt-1 flex items-center gap-1 text-xs font-black text-destructive">
+                              <TriangleAlert className="h-3.5 w-3.5" />
+                              Closes at {formatRange(r).split(" – ")[1]} today — visit earlier
+                            </p>
+                          );
+                        return null;
+                      })()}
                     {stop.note && <p className="mt-1 text-xs italic">{stop.note}</p>}
                   </div>
                 </div>
