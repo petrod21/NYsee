@@ -239,6 +239,22 @@ export function buildItinerary(
     groups[b.day] = b.stops;
   });
 
+  // Anything left over (short days filled up) goes on the roomiest day.
+  while (remaining.length) {
+    const stop = remaining.shift()!;
+    let bestDay = dayOrder[0]!;
+    let bestSlack = -Infinity;
+    dayOrder.forEach((i) => {
+      const used = groups[i]!.reduce((s, a) => s + a.minutes, 0);
+      const slack = budgets[i]! - used;
+      if (slack > bestSlack) {
+        bestSlack = slack;
+        bestDay = i;
+      }
+    });
+    groups[bestDay] = orderStops(hotel, [...groups[bestDay]!, stop]);
+  }
+
   if (startDate) repairClosedDays(groups, startDate);
 
   return groups.map((g, i) => ({ day: i + 1, stopIds: g.map((a) => a.id) }));
