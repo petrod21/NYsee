@@ -18,7 +18,9 @@ import {
   ATTRACTION_BY_ID,
   AREA_COLOR,
   formatOpeningHours,
+  formatRange,
   hoursFor,
+  openRangeOn,
   type Attraction,
 } from "@/data/attractions";
 import {
@@ -28,7 +30,10 @@ import {
   estimateMinutes,
   formatClock,
   formatDuration,
+  paceFor,
+  PACE_SHORT,
   pointsKey,
+  weekdayForDay,
   type LatLng,
   type Leg,
   type SavedTrip,
