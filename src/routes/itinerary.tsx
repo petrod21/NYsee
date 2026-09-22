@@ -130,7 +130,8 @@ function ItineraryPage() {
                     i === day ? "text-primary-foreground/70" : "text-muted-foreground",
                   )}
                 >
-                  {p.stopIds.length} {p.stopIds.length === 1 ? "stop" : "stops"}
+                  {p.stopIds.length} {p.stopIds.length === 1 ? "stop" : "stops"} ·{" "}
+                  {PACE_SHORT[paceFor(trip, i)]}
                   {trip.startDate &&
                   p.stopIds.some((id) => closedReason(trip.startDate!, i, id))
                     ? " · ⚠"
