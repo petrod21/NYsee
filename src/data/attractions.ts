@@ -316,32 +316,49 @@ export function formatRange(r: DayRange): string {
 const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /** "Tue–Sun 10 AM – 5 PM · Closed Mon" */
+/** [1,2,4,0] → "Mon–Tue, Thu, Sun" */
+function dayListLabel(days: number[]): string {
+  const ordered = DISPLAY_ORDER.filter((d) => days.includes(d));
+  const runs: number[][] = [];
+  ordered.forEach((d) => {
+    const last = runs[runs.length - 1];
+    const prev = last?.[last.length - 1];
+    if (last && prev !== undefined && DISPLAY_ORDER.indexOf(d) === DISPLAY_ORDER.indexOf(prev) + 1)
+      last.push(d);
+    else runs.push([d]);
+  });
+  return runs
+    .map((run) =>
+      run.length >= 3
+        ? `${WEEKDAY_SHORT[run[0]!]}–${WEEKDAY_SHORT[run[run.length - 1]!]}`
+        : run.map((d) => WEEKDAY_SHORT[d]).join(" & "),
+    )
+    .join(", ");
+}
+
 export function formatOpeningHours(id: string): string {
   const hrs = hoursFor(id);
   if (hrs.alwaysOpen) return "Open daily, all day";
 
-  type Group = { days: number[]; label: string };
-  const groups: Group[] = [];
+  // Bucket weekdays by identical hours, keeping first-appearance order.
+  const buckets: { label: string; days: number[] }[] = [];
+  const closedDays: number[] = [];
   for (const d of DISPLAY_ORDER) {
     const r = hrs.week[d] ?? null;
-    const label = r ? formatRange(r) : "Closed";
-    const last = groups[groups.length - 1];
-    if (last && last.label === label) last.days.push(d);
-    else groups.push({ days: [d], label });
+    if (!r) {
+      closedDays.push(d);
+      continue;
+    }
+    const label = formatRange(r);
+    const bucket = buckets.find((b) => b.label === label);
+    if (bucket) bucket.days.push(d);
+    else buckets.push({ label, days: [d] });
   }
 
-  const openGroups = groups.filter((g) => g.label !== "Closed");
-  const closedDays = groups.filter((g) => g.label === "Closed").flatMap((g) => g.days);
-
-  const dayLabel = (days: number[]) =>
-    days.length === 1
-      ? WEEKDAY_SHORT[days[0]!]
-      : `${WEEKDAY_SHORT[days[0]!]}–${WEEKDAY_SHORT[days[days.length - 1]!]}`;
-
   const parts =
-    openGroups.length === 1 && closedDays.length === 0
-      ? [`${openGroups[0]!.label} daily`]
-      : openGroups.map((g) => `${dayLabel(g.days)} ${g.label}`);
+    buckets.length === 1 && closedDays.length === 0
+      ? [`${buckets[0]!.label} daily`]
+      : buckets.map((b) => `${dayListLabel(b.days)} ${b.label}`);
 
   if (closedDays.length) {
     parts.push(`Closed ${closedDays.map((d) => WEEKDAY_SHORT[d]).join(" & ")}`);
