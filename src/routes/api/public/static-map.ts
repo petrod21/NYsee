@@ -8,6 +8,8 @@ const pointSchema = z
 const querySchema = z.object({
   hotel: pointSchema,
   stops: z.array(pointSchema).min(1).max(12),
+  center: pointSchema,
+  zoom: z.coerce.number().int().min(1).max(20),
 });
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
@@ -21,11 +23,13 @@ function isImage(response: Response | null): boolean {
   );
 }
 
-function buildParams(hotel: string, stops: string[]) {
+function buildParams(hotel: string, stops: string[], center: string, zoom: number) {
   const params = new URLSearchParams({
     size: "640x360",
     scale: "2",
     maptype: "roadmap",
+    center,
+    zoom: String(zoom),
   });
   params.append("style", "feature:poi|visibility:off");
   params.append("style", "feature:transit.station|element:labels|visibility:off");
@@ -46,6 +50,8 @@ export const Route = createFileRoute("/api/public/static-map")({
         const parsed = querySchema.safeParse({
           hotel: url.searchParams.get("hotel") ?? "",
           stops: url.searchParams.getAll("stop"),
+          center: url.searchParams.get("center") ?? "",
+          zoom: url.searchParams.get("zoom") ?? "",
         });
         if (!parsed.success) return new Response("Bad request", { status: 400 });
 
@@ -55,7 +61,12 @@ export const Route = createFileRoute("/api/public/static-map")({
           | string
           | undefined;
 
-        const params = buildParams(parsed.data.hotel, parsed.data.stops);
+        const params = buildParams(
+          parsed.data.hotel,
+          parsed.data.stops,
+          parsed.data.center,
+          parsed.data.zoom,
+        );
         let upstream: Response | null = null;
 
         // The browser key is the one authorized for Static Maps; send it with an
