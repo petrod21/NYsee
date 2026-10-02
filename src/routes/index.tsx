@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, MapPin, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { HotelSearch } from "@/components/HotelSearch";
+import { AttractionSearch } from "@/components/AttractionSearch";
 import { SubwayBullet } from "@/components/SubwayBullet";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,7 @@ import {
   AREA_COLOR,
   ATTRACTIONS,
   formatOpeningHours,
+  type Attraction,
   type Area,
 } from "@/data/attractions";
 import {
@@ -52,6 +54,7 @@ function PlannerPage() {
   const [paces, setPaces] = useState<DayPace[]>(["full", "full", "full"]);
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [customAttractions, setCustomAttractions] = useState<Attraction[]>([]);
   const [areaFilter, setAreaFilter] = useState<Area | "All">("All");
   const [hasSavedTrip, setHasSavedTrip] = useState(false);
 
@@ -67,6 +70,7 @@ function PlannerPage() {
       if (t.paces?.length) setPaces(t.paces);
       setHotel(t.hotel);
       setSelected(new Set(t.attractionIds));
+      setCustomAttractions(t.customAttractions ?? []);
     }
   }, []);
 
@@ -97,8 +101,11 @@ function PlannerPage() {
   );
 
   const totalMinutes = useMemo(
-    () => ATTRACTIONS.filter((a) => selected.has(a.id)).reduce((s, a) => s + a.minutes, 0),
-    [selected],
+    () =>
+      [...ATTRACTIONS, ...customAttractions]
+        .filter((a) => selected.has(a.id))
+        .reduce((s, a) => s + a.minutes, 0),
+    [customAttractions, selected],
   );
 
   const capacityMinutes = paces
@@ -118,6 +125,23 @@ function PlannerPage() {
     setSelected(new Set(ATTRACTIONS.slice(0, n).map((a) => a.id)));
   }
 
+  function addCustomAttraction(attraction: Attraction) {
+    setCustomAttractions((current) => {
+      const existing = current.find((item) => item.id === attraction.id);
+      return existing ? current : [...current, attraction];
+    });
+    setSelected((current) => new Set(current).add(attraction.id));
+  }
+
+  function removeCustomAttraction(id: string) {
+    setCustomAttractions((current) => current.filter((item) => item.id !== id));
+    setSelected((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+  }
+
   function build() {
     if (!hotel) {
       toast.error("Add your hotel first.");
@@ -128,7 +152,7 @@ function PlannerPage() {
       return;
     }
     const dayPaces = Array.from({ length: days }, (_, i) => paces[i] ?? "full");
-    const chosen = ATTRACTIONS.filter((a) => selected.has(a.id));
+    const chosen = [...ATTRACTIONS, ...customAttractions].filter((a) => selected.has(a.id));
     const plan = buildItinerary(hotel, chosen, days, startDate, dayPaces);
     const existing = loadTrip();
     saveTrip({
@@ -138,6 +162,7 @@ function PlannerPage() {
       paces: dayPaces,
       hotel,
       attractionIds: chosen.map((a) => a.id),
+      customAttractions,
       plan,
       legs: existing?.hotel.lat === hotel.lat && existing?.hotel.lng === hotel.lng ? existing.legs : {},
       createdAt: Date.now(),
@@ -273,13 +298,51 @@ function PlannerPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setSelected(new Set())}
+                onClick={() => {
+                  setSelected(new Set());
+                  setCustomAttractions([]);
+                }}
                 className="label-caps rounded-full border-2 px-3 py-1.5 hover:bg-secondary"
               >
                 Clear
               </button>
             </div>
           </div>
+
+          <p className="mt-3 text-sm font-bold">
+            Pick from the top 50 attractions or enter an address here to find one not listed.
+          </p>
+          <AttractionSearch onAdd={addCustomAttraction} />
+
+          {customAttractions.length > 0 && (
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {customAttractions.map((attraction) => (
+                <li key={attraction.id} className="ticket-sm flex items-center gap-3 p-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                    <MapPin className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-bold leading-tight">{attraction.name}</span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {attraction.note}
+                    </span>
+                    <span className="text-[11px] font-semibold text-muted-foreground">
+                      Added place · 1.5h suggested
+                    </span>
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remove ${attraction.name}`}
+                    onClick={() => removeCustomAttraction(attraction.id)}
+                  >
+                    <X />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
             <AreaChip
