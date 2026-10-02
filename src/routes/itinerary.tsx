@@ -225,7 +225,12 @@ function DayView({
 
   return (
     <div className="space-y-5">
-      <DayMap hotel={trip.hotel} stops={stops} label={`Day ${plan.day}`} />
+      <DayMap
+        hotel={trip.hotel}
+        stops={stops}
+        label={`Day ${plan.day}`}
+        weekday={weekday}
+      />
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="Stops" value={String(stops.length)} />
