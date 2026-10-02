@@ -298,7 +298,10 @@ function PlannerPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setSelected(new Set())}
+                onClick={() => {
+                  setSelected(new Set());
+                  setCustomAttractions([]);
+                }}
                 className="label-caps rounded-full border-2 px-3 py-1.5 hover:bg-secondary"
               >
                 Clear
