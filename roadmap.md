@@ -6,3 +6,4 @@
 - [ ] Decide map provider direction with user (Google vs OSM vs diagram-only) — waiting on user
 - [x] Add opening days/hours per attraction, show them on picker cards and itinerary stops
 - [x] Add trip start date so the planner avoids closed days and day tabs show real dates
+- [x] Add autocomplete for traveler-added attractions and addresses

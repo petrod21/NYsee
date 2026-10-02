@@ -76,6 +76,8 @@ export interface SavedTrip {
   paces?: DayPace[];
   hotel: Hotel;
   attractionIds: string[];
+  /** Traveler-added places kept with the saved itinerary. */
+  customAttractions?: Attraction[];
   plan: DayPlan[];
   legs: Record<string, Leg[]>;
   createdAt: number;

@@ -160,9 +160,13 @@ function DayView({
   onTripUpdate: (t: SavedTrip) => void;
 }) {
   const plan = trip.plan[dayIndex]!;
+  const attractionById = useMemo(
+    () => new Map([...ATTRACTION_BY_ID, ...(trip.customAttractions ?? []).map((a) => [a.id, a] as const)]),
+    [trip.customAttractions],
+  );
   const stops = useMemo(
-    () => plan.stopIds.map((id) => ATTRACTION_BY_ID.get(id)).filter((a): a is Attraction => !!a),
-    [plan.stopIds],
+    () => plan.stopIds.map((id) => attractionById.get(id)).filter((a): a is Attraction => !!a),
+    [attractionById, plan.stopIds],
   );
   const points = useMemo(
     () => [trip.hotel, ...stops, trip.hotel].map((p) => ({ lat: p.lat, lng: p.lng })),
@@ -272,12 +276,12 @@ function DayView({
                   <div className="min-w-0">
                     <p className="font-black leading-tight">{stop.name}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      #{stop.rank} on Tripadvisor · {stop.area}
+                      {stop.custom ? "Added place" : `#${stop.rank} on Tripadvisor`} · {stop.area}
                     </p>
                     <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
-                      {formatOpeningHours(stop.id)}
+                      {stop.custom ? "Hours vary — check before visiting" : formatOpeningHours(stop.id)}
                     </p>
-                    {hoursFor(stop.id).caveat && (
+                    {!stop.custom && hoursFor(stop.id).caveat && (
                       <p className="text-[11px] italic text-muted-foreground">
                         {hoursFor(stop.id).caveat}
                       </p>
@@ -288,7 +292,7 @@ function DayView({
                         {closedReason(trip.startDate, dayIndex, stop.id)} — consider swapping days
                       </p>
                     )}
-                    {weekday !== null &&
+                    {!stop.custom && weekday !== null &&
                       (() => {
                         const r = openRangeOn(stop.id, weekday);
                         if (!r || hoursFor(stop.id).alwaysOpen) return null;

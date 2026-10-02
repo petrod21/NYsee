@@ -32,6 +32,8 @@ export interface Attraction {
   /** Nearest subway lines */
   lines: string[];
   note?: string;
+  /** A traveler-added place rather than one of the ranked top 50. */
+  custom?: boolean;
 }
 
 export const AREA_COLOR: Record<Area, LineColor> = {
