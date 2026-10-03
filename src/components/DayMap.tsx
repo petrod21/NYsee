@@ -40,8 +40,8 @@ function mapViewport(points: LatLng[]) {
   const maxY = Math.max(...ys);
   const availableWidth = MAP_WIDTH - MAP_PADDING * 2;
   const availableHeight = MAP_HEIGHT - MAP_PADDING * 2;
-  const xZoom = Math.log2(availableWidth / Math.max((maxX - minX) * 256, 1));
-  const yZoom = Math.log2(availableHeight / Math.max((maxY - minY) * 256, 1));
+  const xZoom = Math.log2(availableWidth / Math.max((maxX - minX) * 256, 0.000001));
+  const yZoom = Math.log2(availableHeight / Math.max((maxY - minY) * 256, 0.000001));
   const zoom = Math.max(9, Math.min(15, Math.floor(Math.min(xZoom, yZoom))));
   const centerWorld = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
   const center = {
