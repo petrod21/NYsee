@@ -147,17 +147,12 @@ function MapHours({ stops, weekday, viewport }: {
         return (
           <div key={stop.id}>
             <span className="absolute z-10 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ring-2 ring-background" style={{ left: `${dot.x}%`, top: `${dot.y}%` }} />
-            <span data-map-hours className="absolute z-10 max-w-[calc(100%-12px)] border border-border bg-background px-1.5 py-1 text-[10px] font-bold leading-tight text-foreground shadow-sm sm:text-xs" style={{ left: box?.x ?? 0, top: box?.y ?? 0, visibility: box ? "visible" : "hidden" }}>
+            <span data-map-hours className="absolute z-10 w-max max-w-[calc(100%-12px)] border border-border bg-background px-1.5 py-1 text-[10px] font-bold leading-tight text-foreground shadow-sm sm:text-xs" style={{ left: box?.x ?? 0, top: box?.y ?? 0, visibility: box ? "visible" : "hidden" }}>
               {index + 1} · {openingLabel(stop, weekday)}
             </span>
           </div>
         );
       })}
-      {layout?.boxes.some((box) => !box) && (
-        <div className="absolute bottom-1 left-1 border border-border bg-background px-1.5 text-[10px] text-foreground">
-          {layout.boxes.map((box, index) => !box ? `${index + 1} · ${openingLabel(stops[index], weekday)}` : null).filter(Boolean).join(" / ")}
-        </div>
-      )}
     </div>
   );
 }
