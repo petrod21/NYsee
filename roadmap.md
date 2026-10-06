@@ -8,3 +8,4 @@
 - [x] Add trip start date so the planner avoids closed days and day tabs show real dates
 - [x] Add autocomplete for traveler-added attractions and addresses
 - [x] Show each stop's opening time beside its dot on the daily map
+- [x] Prevent map opening-time boxes from overlapping

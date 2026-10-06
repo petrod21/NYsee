@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep static map overlays aligned by sharing an explicit Web Mercator center and zoom with the map request.
+- Place map-hour labels using measured dimensions and collision detection; connect displaced labels to their original dots.
