@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImageOff, Minus, Plus, RotateCcw } from "lucide-react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
@@ -68,6 +68,100 @@ function openingLabel(stop: Attraction, weekday: number | null) {
   return range ? formatRange(range) : "Closed today";
 }
 
+type LabelBox = { x: number; y: number; width: number; height: number };
+
+function MapHours({ stops, weekday, viewport }: {
+  stops: Attraction[];
+  weekday: number | null;
+  viewport: ReturnType<typeof mapViewport>;
+}) {
+  const layer = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState<{ width: number; height: number; boxes: (LabelBox | null)[] } | null>(null);
+
+  useEffect(() => {
+    const element = layer.current;
+    if (!element) return;
+    const arrange = () => {
+      const width = element.clientWidth;
+      const height = element.clientHeight;
+      if (!width || !height) return;
+      const dots = stops.map((stop) => {
+        const p = viewport.position(stop);
+        return { x: p.x * width / 100, y: p.y * height / 100 };
+      });
+      // Reserve the zoom toolbar and every dot before placing measured labels.
+      const occupied: LabelBox[] = [
+        { x: width - 132, y: 0, width: 132, height: 52 },
+        ...dots.map((p) => ({ x: p.x - 6, y: p.y - 6, width: 12, height: 12 })),
+      ];
+      const overlaps = (a: LabelBox, b: LabelBox) =>
+        a.x < b.x + b.width + 4 && a.x + a.width + 4 > b.x &&
+        a.y < b.y + b.height + 4 && a.y + a.height + 4 > b.y;
+      const labels = element.querySelectorAll<HTMLElement>("[data-map-hours]");
+      const boxes = dots.map((dot, index) => {
+        const label = labels[index];
+        if (!label) return null;
+        const w = label.offsetWidth;
+        const h = label.offsetHeight;
+        let best: LabelBox | null = null;
+        let distance = Infinity;
+        // Search all available slots, choosing the one closest to this stop.
+        for (let y = 6; y <= height - h - 6; y += 4) {
+          for (let x = 6; x <= width - w - 6; x += 4) {
+            const box = { x, y, width: w, height: h };
+            const score = (x + w / 2 - dot.x) ** 2 + (y + h / 2 - dot.y) ** 2;
+            if (score >= distance || occupied.some((other) => overlaps(box, other))) continue;
+            best = box;
+            distance = score;
+          }
+        }
+        if (best) occupied.push(best);
+        return best;
+      });
+      setLayout({ width, height, boxes });
+    };
+    const observer = new ResizeObserver(arrange);
+    observer.observe(element);
+    element.querySelectorAll("[data-map-hours]").forEach((label) => observer.observe(label));
+    arrange();
+    return () => observer.disconnect();
+  }, [stops, weekday, viewport]);
+
+  return (
+    <div ref={layer} className="pointer-events-none absolute inset-0">
+      {layout && (
+        <svg className="absolute inset-0 h-full w-full text-foreground" viewBox={`0 0 ${layout.width} ${layout.height}`} aria-hidden>
+          {stops.map((stop, index) => {
+            const box = layout.boxes[index];
+            if (!box) return null;
+            const dot = viewport.position(stop);
+            const x = dot.x * layout.width / 100;
+            const y = dot.y * layout.height / 100;
+            return <line key={stop.id} x1={x} y1={y} x2={Math.max(box.x, Math.min(x, box.x + box.width))} y2={Math.max(box.y, Math.min(y, box.y + box.height))} stroke="currentColor" strokeWidth="1" />;
+          })}
+        </svg>
+      )}
+      {stops.map((stop, index) => {
+        const dot = viewport.position(stop);
+        const box = layout?.boxes[index];
+        return (
+          <div key={stop.id}>
+            <span className="absolute z-10 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ring-2 ring-background" style={{ left: `${dot.x}%`, top: `${dot.y}%` }} />
+            <span data-map-hours className="absolute z-10 max-w-[calc(100%-12px)] border border-border bg-background px-1.5 py-1 text-[10px] font-bold leading-tight text-foreground shadow-sm sm:text-xs" style={{ left: box?.x ?? 0, top: box?.y ?? 0, visibility: box ? "visible" : "hidden" }}>
+              {index + 1} · {openingLabel(stop, weekday)}
+            </span>
+          </div>
+        );
+      })}
+      {layout?.boxes.some((box) => !box) && (
+        <div className="absolute bottom-1 left-1 border border-border bg-background px-1.5 text-[10px] text-foreground">
+          {layout.boxes.map((box, index) => !box ? `${index + 1} · ${openingLabel(stops[index], weekday)}` : null).filter(Boolean).join(" / ")}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Overview map of a day's loop, served through our own server so it works everywhere. */
 export function DayMap({ hotel, stops, label, weekday }: Props) {
   const [failed, setFailed] = useState(false);
@@ -117,22 +211,7 @@ export function DayMap({ hotel, stops, label, weekday }: Props) {
                 draggable={false}
                 onError={() => setFailed(true)}
               />
-              {stops.map((stop, index) => {
-                const position = viewport.position(stop);
-                const alignLeft = position.x > 68;
-                return (
-                  <div
-                    key={stop.id}
-                    className={`pointer-events-none absolute z-10 flex -translate-y-1/2 items-center ${alignLeft ? "-translate-x-full flex-row-reverse" : ""}`}
-                    style={{ left: `${position.x}%`, top: `${position.y}%` }}
-                  >
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-accent ring-2 ring-background" />
-                    <span className={`${alignLeft ? "mr-2" : "ml-2"} whitespace-nowrap border border-border bg-background px-1.5 py-1 text-[10px] font-bold leading-none text-foreground shadow-sm sm:text-xs`}>
-                      {index + 1} · {openingLabel(stop, weekday)}
-                    </span>
-                  </div>
-                );
-              })}
+              <MapHours stops={stops} weekday={weekday} viewport={viewport} />
             </TransformComponent>
 
             <div
