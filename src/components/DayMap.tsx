@@ -102,24 +102,51 @@ function MapHours({ hotel, stops, weekday, viewport }: {
       const overlaps = (a: LabelBox, b: LabelBox) =>
         a.x < b.x + b.width + 4 && a.x + a.width + 4 > b.x &&
         a.y < b.y + b.height + 4 && a.y + a.height + 4 > b.y;
+      // Route path segments (hotel → stops → hotel), matching the static map request.
+      const route = [...pins, pins[0]!];
+      const segments = route.slice(1).map((b, i) => [route[i]!, b] as const);
+      const crossesPath = (box: LabelBox) => {
+        const pad = 3;
+        const x0 = box.x - pad, x1 = box.x + box.width + pad;
+        const y0 = box.y - pad, y1 = box.y + box.height + pad;
+        return segments.some(([a, b]) => {
+          // Liang–Barsky segment vs rectangle clip.
+          const dx = b.x - a.x, dy = b.y - a.y;
+          let t0 = 0, t1 = 1;
+          const checks: [number, number][] = [[-dx, a.x - x0], [dx, x1 - a.x], [-dy, a.y - y0], [dy, y1 - a.y]];
+          for (const [p, q] of checks) {
+            if (p === 0) { if (q < 0) return false; continue; }
+            const r = q / p;
+            if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; }
+            else { if (r < t0) return false; if (r < t1) t1 = r; }
+          }
+          return true;
+        });
+      };
       const labels = element.querySelectorAll<HTMLElement>("[data-map-hours]");
       const boxes = dots.map((dot, index) => {
         const label = labels[index];
         if (!label) return null;
         const w = label.offsetWidth;
         const h = label.offsetHeight;
-        let best: LabelBox | null = null;
-        let distance = Infinity;
-        // Search all available slots, choosing the one closest to this stop.
-        for (let y = 6; y <= height - h - 6; y += 4) {
-          for (let x = 6; x <= width - w - 6; x += 4) {
-            const box = { x, y, width: w, height: h };
-            const score = (x + w / 2 - dot.x) ** 2 + (y + h / 2 - dot.y) ** 2;
-            if (score >= distance || occupied.some((other) => overlaps(box, other))) continue;
-            best = box;
-            distance = score;
+        const search = (avoidPath: boolean) => {
+          let best: LabelBox | null = null;
+          let distance = Infinity;
+          // Search all available slots, choosing the one closest to this stop.
+          for (let y = 6; y <= height - h - 6; y += 4) {
+            for (let x = 6; x <= width - w - 6; x += 4) {
+              const box = { x, y, width: w, height: h };
+              const score = (x + w / 2 - dot.x) ** 2 + (y + h / 2 - dot.y) ** 2;
+              if (score >= distance || occupied.some((other) => overlaps(box, other))) continue;
+              if (avoidPath && crossesPath(box)) continue;
+              best = box;
+              distance = score;
+            }
           }
-        }
+          return best;
+        };
+        // Prefer spots clear of the route; fall back only if none exist.
+        const best = search(true) ?? search(false);
         if (best) occupied.push(best);
         return best;
       });
