@@ -438,7 +438,9 @@ function PlannerPage() {
                 overbooked && selected.size ? "font-bold text-destructive" : "text-muted-foreground",
               )}
             >
-              {!selected.size
+              {!hotel
+                ? "Choose your hotel from the suggestions in step 2"
+                : !selected.size
                 ? "Pick some attractions"
                 : overbooked
                   ? `${Math.round(totalMinutes / 60)}h of sights vs ${Math.round(capacityMinutes / 60)}h available`
