@@ -130,7 +130,7 @@ function MapHours({ hotel, stops, weekday, viewport }: {
     element.querySelectorAll("[data-map-hours]").forEach((label) => observer.observe(label));
     arrange();
     return () => observer.disconnect();
-  }, [stops, weekday, viewport]);
+  }, [hotel, stops, weekday, viewport]);
 
   return (
     <div ref={layer} className="pointer-events-none absolute inset-0">
@@ -211,7 +211,7 @@ export function DayMap({ hotel, stops, label, weekday }: Props) {
                 draggable={false}
                 onError={() => setFailed(true)}
               />
-              <MapHours stops={stops} weekday={weekday} viewport={viewport} />
+              <MapHours hotel={hotel} stops={stops} weekday={weekday} viewport={viewport} />
             </TransformComponent>
 
             <div
