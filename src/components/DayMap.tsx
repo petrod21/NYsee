@@ -70,7 +70,8 @@ function openingLabel(stop: Attraction, weekday: number | null) {
 
 type LabelBox = { x: number; y: number; width: number; height: number };
 
-function MapHours({ stops, weekday, viewport }: {
+function MapHours({ hotel, stops, weekday, viewport }: {
+  hotel: LatLng;
   stops: Attraction[];
   weekday: number | null;
   viewport: ReturnType<typeof mapViewport>;
