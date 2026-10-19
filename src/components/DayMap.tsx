@@ -70,7 +70,8 @@ function openingLabel(stop: Attraction, weekday: number | null) {
 
 type LabelBox = { x: number; y: number; width: number; height: number };
 
-function MapHours({ stops, weekday, viewport }: {
+function MapHours({ hotel, stops, weekday, viewport }: {
+  hotel: LatLng;
   stops: Attraction[];
   weekday: number | null;
   viewport: ReturnType<typeof mapViewport>;
@@ -89,10 +90,14 @@ function MapHours({ stops, weekday, viewport }: {
         const p = viewport.position(stop);
         return { x: p.x * width / 100, y: p.y * height / 100 };
       });
-      // Reserve the zoom toolbar and every dot before placing measured labels.
+      // Reserve the zoom toolbar and every map balloon (hotel + stops) before placing labels.
+      // Google default markers are ~22x38 px at the 640px map width, tip at the point.
+      const s = width / MAP_WIDTH;
+      const hp = viewport.position(hotel);
+      const pins = [{ x: hp.x * width / 100, y: hp.y * height / 100 }, ...dots];
       const occupied: LabelBox[] = [
         { x: width - 132, y: 0, width: 132, height: 52 },
-        ...dots.map((p) => ({ x: p.x - 6, y: p.y - 6, width: 12, height: 12 })),
+        ...pins.map((p) => ({ x: p.x - 12 * s, y: p.y - 40 * s, width: 24 * s, height: 42 * s })),
       ];
       const overlaps = (a: LabelBox, b: LabelBox) =>
         a.x < b.x + b.width + 4 && a.x + a.width + 4 > b.x &&
@@ -125,7 +130,7 @@ function MapHours({ stops, weekday, viewport }: {
     element.querySelectorAll("[data-map-hours]").forEach((label) => observer.observe(label));
     arrange();
     return () => observer.disconnect();
-  }, [stops, weekday, viewport]);
+  }, [hotel, stops, weekday, viewport]);
 
   return (
     <div ref={layer} className="pointer-events-none absolute inset-0">
@@ -206,7 +211,7 @@ export function DayMap({ hotel, stops, label, weekday }: Props) {
                 draggable={false}
                 onError={() => setFailed(true)}
               />
-              <MapHours stops={stops} weekday={weekday} viewport={viewport} />
+              <MapHours hotel={hotel} stops={stops} weekday={weekday} viewport={viewport} />
             </TransformComponent>
 
             <div
