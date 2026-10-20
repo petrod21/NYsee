@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { HotelSearch } from "@/components/HotelSearch";
 import { AttractionSearch } from "@/components/AttractionSearch";
+import { MyTrips } from "@/components/MyTrips";
 import { SubwayBullet } from "@/components/SubwayBullet";
 import { Button } from "@/components/ui/button";
 import {
@@ -206,6 +207,7 @@ function PlannerPage() {
       </header>
 
       <div className="mx-auto max-w-3xl space-y-8 px-5 pt-8">
+        <MyTrips canSave={false} />
         {/* Step 1 */}
         <section>
           <StepHeading n={1} title="Your dates" />

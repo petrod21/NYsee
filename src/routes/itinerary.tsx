@@ -39,6 +39,7 @@ import {
   type SavedTrip,
 } from "@/lib/itinerary";
 import { getDayLegs } from "@/lib/maps.functions";
+import { MyTrips } from "@/components/MyTrips";
 import { loadTrip, saveTrip } from "@/lib/trip-storage";
 import { cn } from "@/lib/utils";
 
@@ -100,6 +101,7 @@ function ItineraryPage() {
             <HotelIcon className="h-4 w-4" />
             <span className="truncate">{trip.hotel.name}</span>
           </p>
+          <div className="mt-4"><MyTrips canSave /></div>
 
           <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
             {trip.plan.map((p, i) => (
