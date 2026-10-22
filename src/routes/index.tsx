@@ -319,7 +319,7 @@ function PlannerPage() {
           {customAttractions.length > 0 && (
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {customAttractions.map((attraction) => (
-                <li key={attraction.id} className="ticket-sm flex items-center gap-3 p-3">
+                <li key={attraction.id} className="ticket-sm flex min-w-0 items-center gap-3 p-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
                     <MapPin className="h-4 w-4" />
                   </span>
@@ -367,7 +367,7 @@ function PlannerPage() {
             {visible.map((a) => {
               const on = selected.has(a.id);
               return (
-                <li key={a.id}>
+                <li key={a.id} className="min-w-0">
                   <button
                     type="button"
                     onClick={() => toggle(a.id)}
@@ -397,9 +397,9 @@ function PlannerPage() {
                         <span>·</span>
                         <span className="shrink-0">{Math.round(a.minutes / 30) / 2}h</span>
                       </span>
-                      <span
-                        className={cn(
-                          "block truncate text-[11px]",
+                        <span
+                          className={cn(
+                            "block text-[11px] break-words",
                           on ? "text-primary-foreground/70" : "text-muted-foreground",
                         )}
                       >
