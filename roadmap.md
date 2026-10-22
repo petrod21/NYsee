@@ -9,3 +9,4 @@
 - [x] Add autocomplete for traveler-added attractions and addresses
 - [x] Show each stop's opening time beside its dot on the daily map
 - [x] Prevent map opening-time boxes from overlapping
+- [ ] Connect project to GitHub (Git sync) — user must do this in Project settings → Git; agent cannot connect a repository
