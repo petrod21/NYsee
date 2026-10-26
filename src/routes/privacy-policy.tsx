@@ -45,7 +45,7 @@ function PrivacyPolicyPage() {
           <p className="mt-2 text-xs text-muted-foreground">Last updated: {UPDATED}</p>
           <p className="mt-4 text-sm leading-relaxed">
             This policy explains how NYsee NYC Transit Planner (the "App"), operated by{" "}
-            <strong>[LEGAL BUSINESS NAME]</strong> ("we", "us"), handles information when you use
+            <strong>Daniel Petrosene</strong> ("we", "us"), handles information when you use
             the App.
           </p>
         </header>
@@ -105,7 +105,14 @@ function PrivacyPolicyPage() {
         </Section>
 
         <Section title="Contact us">
-          <p>Questions about this policy or your information? Contact <strong>[LEGAL BUSINESS NAME]</strong> at <strong>[PRIVACY CONTACT EMAIL]</strong>.</p>
+          <p>
+            Questions about this policy or your information? Contact{" "}
+            <strong>Daniel Petrosene</strong> at{" "}
+            <a className="underline" href="mailto:circadiantravelllc@gmail.com">
+              circadiantravelllc@gmail.com
+            </a>
+            .
+          </p>
         </Section>
       </div>
     </main>
