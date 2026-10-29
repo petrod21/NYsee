@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
 
 import { TERMS_EFFECTIVE_DATE, TERMS_LAST_UPDATED } from "@/lib/terms";
 
@@ -571,4 +570,3 @@ function TermsOfUsePage() {
   );
 }
 
-function _unusedReactNode(_: ReactNode) {}

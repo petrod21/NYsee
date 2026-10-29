@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ItineraryRouteImport } from './routes/itinerary'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as ApiPublicStaticMapRouteImport } from './routes/api/public/static-map'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsOfUseRoute = TermsOfUseRouteImport.update({
+  id: '/terms-of-use',
+  path: '/terms-of-use',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStaticMapRoute = ApiPublicStaticMapRouteImport.update({
   id: '/api/public/static-map',
   path: '/api/public/static-map',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/itinerary': typeof ItineraryRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/api/public/static-map': typeof ApiPublicStaticMapRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/itinerary': typeof ItineraryRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/api/public/static-map': typeof ApiPublicStaticMapRoute
 }
 export interface FileRoutesById {
@@ -52,18 +60,30 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/itinerary': typeof ItineraryRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/api/public/static-map': typeof ApiPublicStaticMapRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/itinerary' | '/privacy-policy' | '/api/public/static-map'
+  fullPaths:
+    | '/'
+    | '/itinerary'
+    | '/privacy-policy'
+    | '/terms-of-use'
+    | '/api/public/static-map'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/itinerary' | '/privacy-policy' | '/api/public/static-map'
+  to:
+    | '/'
+    | '/itinerary'
+    | '/privacy-policy'
+    | '/terms-of-use'
+    | '/api/public/static-map'
   id:
     | '__root__'
     | '/'
     | '/itinerary'
     | '/privacy-policy'
+    | '/terms-of-use'
     | '/api/public/static-map'
   fileRoutesById: FileRoutesById
 }
@@ -71,6 +91,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ItineraryRoute: typeof ItineraryRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  TermsOfUseRoute: typeof TermsOfUseRoute
   ApiPublicStaticMapRoute: typeof ApiPublicStaticMapRoute
 }
 
@@ -97,6 +118,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms-of-use': {
+      id: '/terms-of-use'
+      path: '/terms-of-use'
+      fullPath: '/terms-of-use'
+      preLoaderRoute: typeof TermsOfUseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/static-map': {
       id: '/api/public/static-map'
       path: '/api/public/static-map'
@@ -111,6 +139,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ItineraryRoute: ItineraryRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  TermsOfUseRoute: TermsOfUseRoute,
   ApiPublicStaticMapRoute: ApiPublicStaticMapRoute,
 }
 export const routeTree = rootRouteImport
