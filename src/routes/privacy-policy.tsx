@@ -48,6 +48,14 @@ function PrivacyPolicyPage() {
             <strong>Daniel Petrosene</strong> ("we", "us"), handles information when you use
             the App.
           </p>
+          <p className="mt-3 text-sm leading-relaxed">
+            See also our{" "}
+            <Link to="/terms-of-use" className="font-bold underline">
+              Terms of Use
+            </Link>
+            .
+          </p>
+
         </header>
 
         <Section title="Information we collect">
