@@ -13,6 +13,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { TermsGate } from "@/components/TermsGate";
+
 
 function NotFoundComponent() {
   return (
@@ -124,12 +126,21 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <TermsGate>
+        <Outlet />
+      </TermsGate>
       <footer className="border-t-2 px-5 pb-28 pt-4 text-center text-xs text-muted-foreground">
-        <Link to="/privacy-policy" className="font-bold hover:underline">
-          Privacy Policy
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <Link to="/terms-of-use" className="font-bold hover:underline">
+            Terms of Use
+          </Link>
+          <span aria-hidden>·</span>
+          <Link to="/privacy-policy" className="font-bold hover:underline">
+            Privacy Policy
+          </Link>
+        </div>
       </footer>
+
       <Toaster position="top-center" />
     </QueryClientProvider>
   );

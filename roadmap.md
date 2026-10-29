@@ -10,3 +10,7 @@
 - [x] Show each stop's opening time beside its dot on the daily map
 - [x] Prevent map opening-time boxes from overlapping
 - [ ] Connect project to GitHub (Git sync) — user must do this in Project settings → Git; agent cannot connect a repository
+- [x] Publish public Terms of Use page at /terms-of-use
+- [x] First-launch Terms acceptance screen + acceptance record (version, date/time, status) on device
+- [ ] Re-publish so /terms-of-use goes live at nysee.lovable.app/terms-of-use — user must press Publish
+
