@@ -374,6 +374,10 @@ const SECTIONS: Section[] = [
       },
       {
         t: "p",
+        text: "If we permanently discontinue the App or materially discontinue its core functionality, any applicable refund, remedy, or other consumer rights will be governed by Google Play policies and applicable law. Nothing in these Terms is intended to eliminate any rights or remedies that cannot legally be excluded.",
+      },
+      {
+        t: "p",
         text: "Nothing in these Terms eliminates any rights you may have under applicable consumer protection laws or any obligation that cannot legally be excluded.",
       },
     ],
