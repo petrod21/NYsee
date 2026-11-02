@@ -13,4 +13,5 @@
 - [x] Publish public Terms of Use page at /terms-of-use
 - [x] First-launch Terms acceptance screen + acceptance record (version, date/time, status) on device
 - [ ] Re-publish so /terms-of-use goes live at nysee.lovable.app/terms-of-use — user must press Publish
+- [x] Apply legal assessment to Terms: no-professional-advice, third-party non-control, aggregate liability cap, assumption-of-risk list, individual-operator clarification; bumped Terms version to 2026-11-02
 
