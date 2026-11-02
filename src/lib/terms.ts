@@ -5,9 +5,9 @@
  * saved trips), so no account, email address, or password is collected.
  */
 
-export const TERMS_VERSION = "2026-10-29";
+export const TERMS_VERSION = "2026-11-02";
 export const TERMS_EFFECTIVE_DATE = "October 29, 2026";
-export const TERMS_LAST_UPDATED = "October 29, 2026";
+export const TERMS_LAST_UPDATED = "November 2, 2026";
 
 export interface TermsAcceptance {
   /** Which version of the agreement was accepted. */

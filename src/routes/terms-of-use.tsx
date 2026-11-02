@@ -34,6 +34,10 @@ const SECTIONS: Section[] = [
         t: "p",
         text: "In these Terms, “Developer,” “we,” “us,” and “our” refer to the developer identified above. “You” and “your” refer to the person using the App.",
       },
+      {
+        t: "p",
+        text: "NYsee is owned and operated by Daniel Petrosene as an individual. The contact email address above is only a contact address; it does not indicate that a separate company or limited liability entity owns or operates the App.",
+      },
     ],
   },
   {
@@ -120,6 +124,10 @@ const SECTIONS: Section[] = [
       },
       {
         t: "p",
+        text: "The App is not intended to provide professional travel agency services, professional transportation services, security assessments, emergency assistance, or other professional advice. Any recommendations, suggestions, itineraries, or information provided by the App are for general informational and planning purposes only. You are solely responsible for evaluating the suitability of any information or recommendations before relying on them.",
+      },
+      {
+        t: "p",
         text: "We make no guarantee that information provided through the App is accurate, complete, current, reliable, or suitable for your particular needs.",
       },
       {
@@ -143,6 +151,10 @@ const SECTIONS: Section[] = [
       {
         t: "p",
         text: "The App may use, link to, or display information supplied by third parties, including mapping services, transportation providers, hotel platforms, attraction websites, search providers, and other external services.",
+      },
+      {
+        t: "p",
+        text: "NYsee does not operate, control, or guarantee any third-party service, including mapping, transportation, hotel, attraction, and search providers. When a third-party provider supplies information that the App displays, that provider — not NYsee — is responsible for the underlying service and information.",
       },
       {
         t: "p",
@@ -205,6 +217,10 @@ const SECTIONS: Section[] = [
       },
       {
         t: "p",
+        text: "This cap applies to all of your claims combined, not separately to each claim, and covers claims arising from the App's information, features, errors, omissions, and third-party services or integrations, to the maximum extent permitted by law.",
+      },
+      {
+        t: "p",
         text: "This limitation applies regardless of the legal theory on which a claim is based, including contract, tort, negligence, or another theory, to the extent permitted by law.",
       },
       {
@@ -223,7 +239,21 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         t: "p",
-        text: "You are responsible for your travel plans, bookings, transportation choices, personal safety, and decisions made using information provided by the App.",
+        text: "You are responsible for your travel plans, bookings, transportation choices, personal safety, and decisions made using information provided by the App. This includes decisions involving:",
+      },
+      {
+        t: "list",
+        items: [
+          "Personal safety and security.",
+          "Transportation and navigation.",
+          "Hotel and attraction selections.",
+          "Reservations and ticket purchases.",
+          "Weather, closures, delays, and unexpected circumstances.",
+        ],
+      },
+      {
+        t: "p",
+        text: "You acknowledge that travel conditions, transportation schedules, routes, operating hours, prices, availability, safety conditions, and other travel-related information may change at any time. You agree not to rely exclusively on the App for information that could materially affect your safety, financial decisions, travel arrangements, or scheduled activities.",
       },
       {
         t: "p",
